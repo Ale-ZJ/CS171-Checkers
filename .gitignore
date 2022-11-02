@@ -1,0 +1,5 @@
+# Compiled Object Files
+*.o
+*.obj
+*.slo
+*.lo
