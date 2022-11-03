@@ -12,6 +12,11 @@ public:
     Board board;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
+private:
+    // returns the utility/heuristic value given the state of the game
+    int evaluation(Board board);
+    int evalMin(int currentMax);
+    int evalMax(int currentMax);
 };
 
 #endif //STUDENTAI_H

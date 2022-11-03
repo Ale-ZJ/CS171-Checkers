@@ -22,17 +22,29 @@ Move StudentAI::GetMove(Move move)
     }
 
     // retrieve all the possible moves we can make, based on the current board state
-    vector<vector<Move> > moves = board.getAllPossibleMoves(player);
-    // randomly select a valid move to make
-    int i = rand() % (moves.size());
-    vector<Move> checker_moves = moves[i];
-    int j = rand() % (checker_moves.size());
-    Move res = checker_moves[j];
+    vector<vector<Move>> moves = board.getAllPossibleMoves(player);
+
+//    randomly select a valid move to make
+    //    int i = rand() % (moves.size());
+    //    vector<Move> checker_moves = moves[i];
+    //    int j = rand() % (checker_moves.size());
+    //    Move res = checker_moves[j];
+
+    
+
+
     // make the chosen move
     board.makeMove(res,player);
+
     // return the chosen move to the opponent
     return res;
 
 
 }
 
+int StudentAI::evaluation(Board board)
+{
+    // returns the difference in number of pieces
+    return board.blackCount - board.whiteCount;
+    // REMEMBER: add isKing difference for a better heuristic
+}
