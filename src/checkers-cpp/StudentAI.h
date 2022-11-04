@@ -5,7 +5,7 @@
 //#include <pair>
 #pragma once
 
-using namespace std;
+// using namespace std;
 
 // pair<int, Move> pair
 // pair.first = evaluation (heuristics) for this move
@@ -36,7 +36,7 @@ private:
     Move minimax(int depth, Board board, int minimaxPlayer);
 
     //pair<int, Move> evalMin(int depth, Board board, int maxPlayer);
-    MinimaxPair evalMax(int depth, Board board, int minPlayer);
+    MinimaxPair evalMax(int depth, Board board, int maxPlayer);
     MinimaxPair evalMin(int depth, Board board, int minPlayer);
 };
 

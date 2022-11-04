@@ -34,10 +34,10 @@ Move StudentAI::GetMove(Move move)
     //    int j = rand() % (checker_moves.size());
     //    Move res = checker_moves[j];
 
-    Move res = minimax(MINIMAX_DEPTH, board, player); 
+    Move res = minimax(MINIMAX_DEPTH, board, 2); 
 
     // make the chosen move
-    board.makeMove(res,player);
+    board.makeMove(res,2);
 
     // return the chosen move to the opponent
     return res;
@@ -64,7 +64,7 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
-    if(depth == 0 || board.isWin(maxPlayer == 2 ? 1 : 2))
+    if(depth == 0 || board.isWin(1))
     {
         return MinimaxPair{evaluate(board), Move()};
         
@@ -81,17 +81,17 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
     // maxValue_bestMove.second = nullptr;
 
     // getting all the possible moves for a given player
-    vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
+    vector<vector<Move>> moves = board.getAllPossibleMoves(2);
 
     for (vector<Move> checker_moves : moves)
     {
         for (Move m : checker_moves)
         {
             Board new_board = board;
-            new_board.makeMove(m, maxPlayer);
+            new_board.makeMove(m, 1);
 
             // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2 ? 1 : 2);
-            MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2 ? 1 : 2);
+            MinimaxPair v2_m2 = evalMin(depth-1, new_board, 1);
 
             if (v2_m2.value > maxValue_bestMove.value) 
             {
@@ -106,42 +106,44 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
 
 MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
 {
-//     // check if the game terminates because of the opponent's move
-//     // in which case, there is no more move for us to make, OR
-//     // check if we have reached the desired recursive depth
-//     if(depth == 0 || board.isWin(minPlayer == 1 ? 2 : 1))
-//     {
-//         pair<int, Move> evalMove = {evaluate(board), nullptr};
-//         return evalMove;
-//     }
+    // check if the game terminates because of the opponent's move
+    // in which case, there is no more move for us to make, OR
+    // check if we have reached the desired recursive depth
+    if(depth == 0 || board.isWin(2))
+    {
+        return MinimaxPair{evaluate(board), Move()};
+    }
 
-//     // keep track of the highest minimax evaluation value
-//     // max player takes the move with the highest value
-//     pair<int, Move> minValue_bestMove;
-//     minValue_bestMove.first = numeric_limits<int>::max();
-//     minValue_bestMove.second = nullptr;
+    // keep track of the highest minimax evaluation value
+    // max player takes the move with the highest value
+    MinimaxPair minValue_bestMove{numeric_limits<int>::max(), Move()};
 
-//     // getting all the possible moves for a given player
-//     vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
+    // pair<int, Move> minValue_bestMove;
+    // minValue_bestMove.first = numeric_limits<int>::max();
+    // minValue_bestMove.second = nullptr;
 
-//     for (vector<Move> checker_moves : moves)
-//     {
-//         for (Move m : checker_moves)
-//         {
-//             Board new_board = board;
-//             new_board.makeMove(m, minPlayer);
+    // getting all the possible moves for a given player
+    vector<vector<Move>> moves = board.getAllPossibleMoves(1);
 
-//             pair<int, Move> v2_m2 = evalMin(depth-1, new_board, minPlayer == 1 ? 2 : 1);
+    for (vector<Move> checker_moves : moves)
+    {
+        for (Move m : checker_moves)
+        {
+            Board new_board = board;
+            new_board.makeMove(m, minPlayer);
 
-//             if (v2_m2.first < minValue_bestMove.first) 
-//             {
-//                 minValue_bestMove = v2_m2;
-//             }
-//         }
-//     } 
+            // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, minPlayer == 1 ? 2 : 1);
+            MinimaxPair v2_m2 = evalMax(depth-1, new_board, 2);
+
+            if (v2_m2.value < minValue_bestMove.value) 
+            {
+                minValue_bestMove = v2_m2;
+            }
+        }
+    } 
 
     //return minValue_bestMove;
-    return MinimaxPair{0, Move()};
+    return minValue_bestMove;
 }
 
     
