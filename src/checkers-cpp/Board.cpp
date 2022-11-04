@@ -1,4 +1,5 @@
 #include "Board.h"
+#include <iostream>
 
 const map<string , string> Board::opponent = {{"W","B"},{"B","W"}};
 
@@ -31,6 +32,7 @@ Board::Board(int col, int row,int p)
 }
 
 
+// copy constructor
 Board::Board(const Board& b)
     : col{b.col}, row{b.row}, p{b.p}, blackCount{b.blackCount}, 
     whiteCount{b.whiteCount}, tieCount{b.tieCount}, tieMax{b.tieMax}
@@ -300,6 +302,7 @@ void Board::makeMove(const Move& move, int player)
         turn = "W";
     else {
         throw InvalidMoveError();
+        cout << "Board::makeMove() : wrong player" << endl;
     }
     vector<Position> move_list = move.seq;
     vector<vector<Position> > move_to_check;
@@ -389,6 +392,7 @@ void Board::makeMove(const Move& move, int player)
         }
         else {
             throw InvalidMoveError();
+            cout<<"Board::makeMove() : invalid move!" << endl;
         }
 
     }
