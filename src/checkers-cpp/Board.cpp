@@ -31,6 +31,22 @@ Board::Board(int col, int row,int p)
 }
 
 
+Board::Board(const Board& b)
+    : col{b.col}, row{b.row}, p{b.p}, blackCount{b.blackCount}, 
+    whiteCount{b.whiteCount}, tieCount{b.tieCount}, tieMax{b.tieMax}
+{
+    this->board = vector<vector<Checker>> (row);
+
+    for (int i = 0; i < row; ++i)
+    {
+        for (int j = 0; j < col; ++j)
+        {
+            board[i].push_back(b.board[i][j]);
+        }
+    }
+}
+
+
 void Board::showBoard()
 {
     cout << setw(2) << " ";

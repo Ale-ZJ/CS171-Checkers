@@ -25,6 +25,11 @@ public:
     vector<Saved_Move> saved_move_list;
 	Board();
 	Board(int col, int row,int p);
+
+    // copy constructor is gonna make a new board that is the 
+    // deep copy of the given board
+    Board(const Board& b); 
+
     void initializeGame ();
     bool isInBoard(int pos_x,int pos_y);
     bool isValidMove(int chess_row, int chess_col, int target_row, int target_col, string turn);
