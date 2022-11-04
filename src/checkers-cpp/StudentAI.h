@@ -2,7 +2,7 @@
 #define STUDENTAI_H
 #include "AI.h"
 #include "Board.h"
-#include <pair>
+//#include <pair>
 #pragma once
 
 using namespace std;
@@ -10,6 +10,11 @@ using namespace std;
 // pair<int, Move> pair
 // pair.first = evaluation (heuristics) for this move
 // pair.second = possible move taken by AI
+
+struct MinimaxPair{
+    int value; 
+    Move move;
+};
 
 //The following part should be completed by students.
 //Students can modify anything except the class name and exisiting functions and varibles.
@@ -30,8 +35,9 @@ private:
     // recursive algorithm to pick best move
     Move minimax(int depth, Board board, int minimaxPlayer);
 
-    pair<int, Move> evalMin(int depth, Board board, int maxPlayer);
-    pair<int, Move> evalMax(int depth, Board board, int minPlayer);
+    //pair<int, Move> evalMin(int depth, Board board, int maxPlayer);
+    MinimaxPair evalMax(int depth, Board board, int minPlayer);
+    MinimaxPair evalMin(int depth, Board board, int minPlayer);
 };
 
 #endif //STUDENTAI_H
