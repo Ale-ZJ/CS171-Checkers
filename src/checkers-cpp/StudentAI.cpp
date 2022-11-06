@@ -67,22 +67,15 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
-    if(depth == 0 || board.isWin(maxPlayer == 2?1:2))
+    if(depth == 0 || board.isWin(1) || board.isWin(2))
     {
         //cout << "StudentAI::evalMax() : inside terminal check" << endl;
         return MinimaxPair{evaluate(board), Move()};
-        
-        // pair<int, Move> evalMove = {evaluate(board), nullptr};
-        // return evalMove;
     }
 
     // keep track of the highest minimax evaluation value
     // max player takes the move with the highest value
     MinimaxPair maxValue_bestMove{numeric_limits<int>::min(), Move()};
-
-    // pair<int, Move> maxValue_bestMove;
-    // maxValue_bestMove.first = numeric_limits<int>::min();
-    // maxValue_bestMove.second = nullptr;
 
     // getting all the possible moves for a given player
     vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
@@ -97,13 +90,11 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
             Board new_board = board;
 
             //cout << "StudentAI::evalMax() : new board below c:" << endl;
-            //new_board.showBoard();
 
 
             new_board.makeMove(m, maxPlayer);
 
             //cout << "StudentAI::evalMax() : deep copy made" << endl;
-            // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2 ? 1 : 2);
             MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2?1:2);
 
             if (v2_m2.value > maxValue_bestMove.value) 
@@ -125,7 +116,7 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
-    if(depth == 0 || board.isWin(minPlayer == 1?2:1))
+    if(depth == 0 || board.isWin(1) || board.isWin(2))
     {
         return MinimaxPair{evaluate(board), Move()};
     }
@@ -133,10 +124,6 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
     // keep track of the highest minimax evaluation value
     // max player takes the move with the highest value
     MinimaxPair minValue_bestMove{numeric_limits<int>::max(), Move()};
-
-    // pair<int, Move> minValue_bestMove;
-    // minValue_bestMove.first = numeric_limits<int>::max();
-    // minValue_bestMove.second = nullptr;
 
     // getting all the possible moves for a given player
     vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
@@ -148,7 +135,6 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
             Board new_board = board;
             new_board.makeMove(m, minPlayer);
 
-            // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, minPlayer == 1 ? 2 : 1);
             MinimaxPair v2_m2 = evalMax(depth-1, new_board, minPlayer == 1?2:1);
 
             if (v2_m2.value < minValue_bestMove.value) 
@@ -160,7 +146,6 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
         }
     } 
 
-    //return minValue_bestMove;
     return minValue_bestMove;
 }
 
