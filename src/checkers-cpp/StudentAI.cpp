@@ -103,7 +103,6 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
             new_board.makeMove(m, maxPlayer);
 
             //cout << "StudentAI::evalMax() : deep copy made" << endl;
-
             // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2 ? 1 : 2);
             MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2?1:2);
 

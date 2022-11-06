@@ -21,7 +21,7 @@ struct MinimaxPair{
 class StudentAI :public AI
 {
 private: 
-    const int MINIMAX_DEPTH = 3;
+    const int MINIMAX_DEPTH = 2;
 
 public:
     Board board;
