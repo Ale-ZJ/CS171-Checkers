@@ -35,10 +35,10 @@ Move StudentAI::GetMove(Move move)
     //    int j = rand() % (checker_moves.size());
     //    Move res = checker_moves[j];
 
-    Move res = minimax(MINIMAX_DEPTH, board, 2); 
+    Move res = minimax(MINIMAX_DEPTH, board, player); 
 
     // make the chosen move
-    board.makeMove(res,2);
+    board.makeMove(res,player);
 
     // return the chosen move to the opponent
     return res;
@@ -49,8 +49,9 @@ Move StudentAI::GetMove(Move move)
 // returns the difference in number of pieces
 int StudentAI::evaluate(Board board)
 {
-    return board.blackCount - board.whiteCount;
     // REMEMBER: add isKing difference for a better heuristic
+    if (player == 2) return board.whiteCount - board.blackCount;
+    else return board.blackCount - board.whiteCount;
 }
 
 
@@ -66,7 +67,7 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
-    if(depth == 0 || board.isWin(1))
+    if(depth == 0 || board.isWin(maxPlayer == 2?1:2))
     {
         //cout << "StudentAI::evalMax() : inside terminal check" << endl;
         return MinimaxPair{evaluate(board), Move()};
@@ -84,7 +85,7 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
     // maxValue_bestMove.second = nullptr;
 
     // getting all the possible moves for a given player
-    vector<vector<Move>> moves = board.getAllPossibleMoves(2);
+    vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
     //cout << "StudentAI::evalMax() : possible moves is " << moves.size() << endl;
 
     for (vector<Move> checker_moves : moves)
@@ -99,16 +100,16 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
             //new_board.showBoard();
 
 
-            new_board.makeMove(m, 2);
+            new_board.makeMove(m, maxPlayer);
 
             //cout << "StudentAI::evalMax() : deep copy made" << endl;
 
             // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2 ? 1 : 2);
-            MinimaxPair v2_m2 = evalMin(depth-1, new_board, 1);
+            MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2?1:2);
 
             if (v2_m2.value > maxValue_bestMove.value) 
             {
-                cout << "StudentAI::evalMax() : heuristic number is: " << v2_m2.value << endl;
+                //cout << "StudentAI::evalMax() : heuristic number is: " << v2_m2.value << endl;
                 maxValue_bestMove.value = v2_m2.value;
                 maxValue_bestMove.move  = m;
             }
@@ -125,7 +126,7 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
-    if(depth == 0 || board.isWin(2))
+    if(depth == 0 || board.isWin(minPlayer == 1?2:1))
     {
         return MinimaxPair{evaluate(board), Move()};
     }
@@ -139,21 +140,21 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
     // minValue_bestMove.second = nullptr;
 
     // getting all the possible moves for a given player
-    vector<vector<Move>> moves = board.getAllPossibleMoves(1);
+    vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
 
     for (vector<Move> checker_moves : moves)
     {
         for (Move m : checker_moves)
         {
             Board new_board = board;
-            new_board.makeMove(m, 1);
+            new_board.makeMove(m, minPlayer);
 
             // pair<int, Move> v2_m2 = evalMin(depth-1, new_board, minPlayer == 1 ? 2 : 1);
-            MinimaxPair v2_m2 = evalMax(depth-1, new_board, 2);
+            MinimaxPair v2_m2 = evalMax(depth-1, new_board, minPlayer == 1?2:1);
 
             if (v2_m2.value < minValue_bestMove.value) 
             {
-                cout << "StudentAI::evalMin() : heuristic number is: " << v2_m2.value << endl;
+                //cout << "StudentAI::evalMin() : heuristic number is: " << v2_m2.value << endl;
                 minValue_bestMove.value = v2_m2.value;
                 minValue_bestMove.move  = m;
             }
