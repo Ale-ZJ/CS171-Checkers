@@ -108,6 +108,7 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
 
             if (v2_m2.value > maxValue_bestMove.value) 
             {
+                cout << "StudentAI::evalMax() : heuristic number is: " << v2_m2.value << endl;
                 maxValue_bestMove.value = v2_m2.value;
                 maxValue_bestMove.move  = m;
             }
@@ -152,6 +153,7 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
 
             if (v2_m2.value < minValue_bestMove.value) 
             {
+                cout << "StudentAI::evalMin() : heuristic number is: " << v2_m2.value << endl;
                 minValue_bestMove.value = v2_m2.value;
                 minValue_bestMove.move  = m;
             }
