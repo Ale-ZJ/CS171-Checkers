@@ -2,14 +2,8 @@
 #define STUDENTAI_H
 #include "AI.h"
 #include "Board.h"
-//#include <pair>
 #pragma once
 
-// using namespace std;
-
-// pair<int, Move> pair
-// pair.first = evaluation (heuristics) for this move
-// pair.second = possible move taken by AI
 
 struct MinimaxPair{
     int value; 

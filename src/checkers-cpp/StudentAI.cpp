@@ -1,3 +1,12 @@
+/*** 
+    Group Name: ArlongsHenchmen
+    Group members:
+        Sumpter, Danielle Lapre, dsumpter, 63383218
+        Zhang Jiang, Alexandra, azhangji, 53188999
+    Last Modified: 11/06/2022
+***/
+
+
 #include "StudentAI.h"
 #include <random>
 #include <limits>
@@ -25,16 +34,6 @@ Move StudentAI::GetMove(Move move)
         board.makeMove(move,player == 1?2:1);
     }
 
-    // retrieve all the possible moves that one player can make, 
-    // based on the current board state
-    // vector<vector<Move>> moves = board.getAllPossibleMoves(player);
-
-    //    randomly select a valid move to make
-    //    int i = rand() % (moves.size());
-    //    vector<Move> checker_moves = moves[i];
-    //    int j = rand() % (checker_moves.size());
-    //    Move res = checker_moves[j];
-
     Move res = minimax(MINIMAX_DEPTH, board, player); 
 
     // make the chosen move
@@ -49,7 +48,6 @@ Move StudentAI::GetMove(Move move)
 // returns the difference in number of pieces
 int StudentAI::evaluate(Board board)
 {
-    // REMEMBER: add isKing difference for a better heuristic
     if (player == 2) return board.whiteCount - board.blackCount;
     else return board.blackCount - board.whiteCount;
 }
@@ -63,13 +61,11 @@ Move StudentAI::minimax(int depth, Board board, int minimaxPlayer)
 
 MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
 {
-    //cout << "StudentAI::evalMax() : inside evalMax" << endl;
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
     if(depth == 0 || board.isWin(1) || board.isWin(2))
     {
-        //cout << "StudentAI::evalMax() : inside terminal check" << endl;
         return MinimaxPair{evaluate(board), Move()};
     }
 
@@ -79,27 +75,17 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
 
     // getting all the possible moves for a given player
     vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
-    //cout << "StudentAI::evalMax() : possible moves is " << moves.size() << endl;
 
     for (vector<Move> checker_moves : moves)
     {
         for (Move m : checker_moves)
         {
-            //cout << "StudentAI::evalMax() : inside nested for loop" << endl;
-
             Board new_board = board;
-
-            //cout << "StudentAI::evalMax() : new board below c:" << endl;
-
-
             new_board.makeMove(m, maxPlayer);
-
-            //cout << "StudentAI::evalMax() : deep copy made" << endl;
             MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2?1:2);
 
             if (v2_m2.value > maxValue_bestMove.value) 
             {
-                //cout << "StudentAI::evalMax() : heuristic number is: " << v2_m2.value << endl;
                 maxValue_bestMove.value = v2_m2.value;
                 maxValue_bestMove.move  = m;
             }
@@ -112,7 +98,6 @@ MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
 
 MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
 {
-    //cout << "StudentAI::evalMin() : inside evalMin" << endl;
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
     // check if we have reached the desired recursive depth
@@ -134,12 +119,10 @@ MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
         {
             Board new_board = board;
             new_board.makeMove(m, minPlayer);
-
             MinimaxPair v2_m2 = evalMax(depth-1, new_board, minPlayer == 1?2:1);
 
             if (v2_m2.value < minValue_bestMove.value) 
             {
-                //cout << "StudentAI::evalMin() : heuristic number is: " << v2_m2.value << endl;
                 minValue_bestMove.value = v2_m2.value;
                 minValue_bestMove.move  = m;
             }
