@@ -10,6 +10,15 @@ struct MinimaxPair{
     Move move;
 };
 
+
+struct MonteCarloStruct{
+    int w_i; // number of simulations that resutled in a WIN for the parent node 
+    int s_i; // total number of simulations for a node
+    bool visited; 
+    Move parentMove;
+};
+
+
 //The following part should be completed by students.
 //Students can modify anything except the class name and exisiting functions and varibles.
 class StudentAI :public AI
@@ -21,6 +30,9 @@ public:
     Board board;
 	StudentAI(int col, int row, int p);
 	virtual Move GetMove(Move board);
+
+private:
+    Move mcts();
 
 private:
     // returns the utility/heuristic value given the state of the game

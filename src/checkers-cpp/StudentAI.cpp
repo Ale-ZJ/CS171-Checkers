@@ -22,6 +22,8 @@ StudentAI::StudentAI(int col,int row,int p)
     board = Board(col,row,p);
     board.initializeGame();
     player = 2;
+
+    map<Board, MonteCarloStruct> mct; // Monte Carlo Tree
 }
 
 Move StudentAI::GetMove(Move move)
@@ -34,7 +36,8 @@ Move StudentAI::GetMove(Move move)
         board.makeMove(move,player == 1?2:1);
     }
 
-    Move res = minimax(MINIMAX_DEPTH, board, player); 
+    // Move res = minimax(MINIMAX_DEPTH, board, player); 
+    Move res = mcts();
 
     // make the chosen move
     board.makeMove(res,player);
@@ -43,6 +46,19 @@ Move StudentAI::GetMove(Move move)
     return res;
 
 }
+
+
+Move mcts(){
+
+}
+
+
+
+
+
+
+
+
 
 
 // returns the difference in number of pieces
