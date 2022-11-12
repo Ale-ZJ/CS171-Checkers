@@ -45,7 +45,7 @@ private: // Monte Carlo Tree Search algorithm
     void simulateGames(Board board, MCNode curr);
     Board select(MCNode curr);
     Board expand(Board b);
-    int rollout(Board b);
+    int rollout(Board b, int turn);
     void backpropagate(int w, MCNode curr);
     double calculateUCT(int nodeIdx);
 

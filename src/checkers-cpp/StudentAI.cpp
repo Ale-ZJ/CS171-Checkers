@@ -11,6 +11,7 @@
 #include <random>
 #include <limits>
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -31,14 +32,14 @@ Move StudentAI::GetMove(Move move)
     {
         player = 1;
     } else{
-        board.makeMove(move,player == 1?2:1);
+        board.makeMove(move, player == 1?2:1);
     }
 
     // Move res = minimax(MINIMAX_DEPTH, board, player); 
     Move res = mcts();
 
     // make the chosen move
-    board.makeMove(res,player);
+    board.makeMove(res, player);
 
     // return the chosen move to the opponent
     return res;
@@ -48,10 +49,10 @@ Move StudentAI::GetMove(Move move)
 
 // -------- MONTE CARLO SEARCH TREE ALGORITHM --------------
 
+// NOTE: make function to create new MCNode and add it to the MCTree
 
-Move mcts(){
-    // create a new map
-
+Move mcts()
+{
     // make a new MCNode of the current board and add it into the MCTree
     Board copyBoard = board;
     MCNode headNode;
@@ -64,7 +65,7 @@ Move mcts(){
     // make each move on a new board, then make a new MCNode for each new board,
     // adding each into the MCTree
 
-    // do 4 simulations of the game
+    // do 20 simulations of the game
 
     // calculate the w_i/s_i rate for each possible move from the current board
 
@@ -74,6 +75,7 @@ Move mcts(){
 }
 
 
+// NOTE: need to keep track of player
 void simulateGames(Board board, MCNode curr)
 {
     // if (current node is a leaf node)
@@ -81,7 +83,7 @@ void simulateGames(Board board, MCNode curr)
             // curr node = expand(board)
 
         // new board = copy of board
-        // int = rollout(new board)
+        // int = rollout(new board, player)
         // backpropagation(int, current node)
 
         // RETURN
@@ -94,11 +96,25 @@ void simulateGames(Board board, MCNode curr)
 
 Board select(MCNode curr)
 {
-    // calculate the UCT of the children nodes
+    // keep track of the board with the highest UCT
+    Board highestBoard;
+    double highestUCT;
 
-    // find the child node with the highest UCT
+    // calculate the UCT of the children nodes
+    for (unsigned int c : curr.children)
+    {
+        // find the child node with the highest UCT
+        double u = calculateUCT(c);
+        
+        if (u > highestUCT)
+        {
+            highestUCT = u;
+            highestBoard = MCTree[c].board;
+        }
+    }
 
     // RETURN the node with the highest UCT
+    return highestBoard;
 }
 
 
@@ -114,51 +130,95 @@ Board expand(Board b)
 }
 
 
-int rollout(Board b)
+// NOTE: need to change the turn for each recursive call of the rollout
+int rollout(Board b, int turn)
 {
     // if (node is terminal)
-    //      if win/tie, RETURN 1
-    //      else, RETURN 0
+    if (b.isWin(turn) == 1 | b.isWin(turn) == 2 | b.isWin(turn) == -1)
+    {
+        // if win for us/tie, return 1
+        if (turn == player && (b.isWin(turn) == turn | b.isWin(turn) == -1))
+        {
+            return 1;
+        }
+        // else if loss for us, return 0
+        else
+        {
+            return 0;
+        }
+    }
 
     // get all moves for the current board
+    vector<vector<Move> > moves = b.getAllPossibleMoves(turn);
 
     // select a random move
+    int i = rand() % (moves.size());
+    vector<Move> checker_moves = moves[i];
+    int j = rand() % (checker_moves.size());
+    Move choice = checker_moves[j];
 
     // make selected move on the board
+    b.makeMove(choice, turn);
+
+    // change the turn
+    if (turn == 1) turn = 2;
+    else turn = 1;
 
     // RETURN rollout(board)
+    return rollout(b, turn);
 }
 
 
 void backpropagate(int w, MCNode curr)
 {
     // update node's w_i += int
+    curr.w_i += w;
 
     // s_i++
+    curr.s_i += 1;
 
     // if (node is head)
     //      RETURN
+    if (curr.parentNode == -1)
+    {
+        return;
+    }
+    else
+    {
     // else
-    //      parent node = get parent node
-    //      RETURN backpropagate(int, parent node)
+        // parent node = get parent node
+        curr = MCTree[curr.parentNode];
 
+        // RETURN backpropagate(int, parent node)
+        return backpropagate(w, curr);
+    }
 }
 
 
 double calculateUCT(int nodeIdx)
 {
-    // get values for w_i, s_i and s_p
+    // get values for w_i and s_i
+    double w = MCTree[nodeIdx].w_i;
+    double s = MCTree[nodeIdx].s_i;
+
+    // access parent node and get s_p
+    int parent = MCTree[nodeIdx].parentNode;
+    double p = MCTree[parent].s_i;
 
     // frac = w_i/s_i
+    double frac = w / s;
 
     // num = ln(s_p)
+    double num = log(p);
 
-    // sq = sqrt(ln(s_p) / s_i)
+    // sq = sqrt(num / s_i)
+    double q = sqrt(num / s);
 
     // sum = frac + (c * sq)
+    double sum = frac + (c * q);
 
     // RETURN sum
-
+    return sum;
 }
 
 
