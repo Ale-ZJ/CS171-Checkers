@@ -22,8 +22,6 @@ StudentAI::StudentAI(int col,int row,int p)
     board = Board(col,row,p);
     board.initializeGame();
     player = 2;
-
-    map<Board, MonteCarloStruct> mct; // Monte Carlo Tree
 }
 
 Move StudentAI::GetMove(Move move)
@@ -48,8 +46,16 @@ Move StudentAI::GetMove(Move move)
 }
 
 
-Move mcts(){
+// -------- MONTE CARLO SEARCH TREE ALGORITHM --------------
 
+
+Move mcts(){
+    // add the current board into the MCTree
+    Board copyBoard = board;
+    MCNode headNode;
+    headNode.board = copyBoard;
+    headNode.parentNode = -1;
+    MCTree.insert(headNode);
 }
 
 
@@ -59,6 +65,7 @@ Move mcts(){
 
 
 
+// ---------------- MINIMAX ALGORITHM  ------------------
 
 
 // returns the difference in number of pieces
