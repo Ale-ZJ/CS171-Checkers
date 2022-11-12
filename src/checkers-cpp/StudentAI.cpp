@@ -50,18 +50,116 @@ Move StudentAI::GetMove(Move move)
 
 
 Move mcts(){
-    // add the current board into the MCTree
+    // create a new map
+
+    // make a new MCNode of the current board and add it into the MCTree
     Board copyBoard = board;
     MCNode headNode;
     headNode.board = copyBoard;
     headNode.parentNode = -1;
     MCTree.insert(headNode);
+
+    // get the possible moves from the current board
+
+    // make each move on a new board, then make a new MCNode for each new board,
+    // adding each into the MCTree
+
+    // do 4 simulations of the game
+
+    // calculate the w_i/s_i rate for each possible move from the current board
+
+    // find the move that results in the highest w_i/s_i
+
+    // RETURN the highest w_i/s_i move
 }
 
 
+void simulateGames(Board board, MCNode curr)
+{
+    // if (current node is a leaf node)
+        // if s_i != 0
+            // curr node = expand(board)
+
+        // new board = copy of board
+        // int = rollout(new board)
+        // backpropagation(int, current node)
+
+        // RETURN
+
+    // else (if not a leaf node)
+        // child node = select()
+        // RETURN simulateGames(child node)
+}
 
 
+Board select(MCNode curr)
+{
+    // calculate the UCT of the children nodes
 
+    // find the child node with the highest UCT
+
+    // RETURN the node with the highest UCT
+}
+
+
+Board expand(Board b)
+{
+    // get all possible moves from the current board
+
+    // make each move on a new board, then make a new MCNode for each new board,
+    // adding each into the MCTree
+        // save the first new MCNode
+
+    // RETURN the first new child (aka first new MCNode)
+}
+
+
+int rollout(Board b)
+{
+    // if (node is terminal)
+    //      if win/tie, RETURN 1
+    //      else, RETURN 0
+
+    // get all moves for the current board
+
+    // select a random move
+
+    // make selected move on the board
+
+    // RETURN rollout(board)
+}
+
+
+void backpropagate(int w, MCNode curr)
+{
+    // update node's w_i += int
+
+    // s_i++
+
+    // if (node is head)
+    //      RETURN
+    // else
+    //      parent node = get parent node
+    //      RETURN backpropagate(int, parent node)
+
+}
+
+
+double calculateUCT(int nodeIdx)
+{
+    // get values for w_i, s_i and s_p
+
+    // frac = w_i/s_i
+
+    // num = ln(s_p)
+
+    // sq = sqrt(ln(s_p) / s_i)
+
+    // sum = frac + (c * sq)
+
+    // RETURN sum
+
+}
 
 
 
