@@ -150,7 +150,10 @@ int StudentAI::rollout(Board b, int turn)
 
     // if the game board is terminal
     if (b.isWin(turn) != 0) {
-        
+        // if we win or tie then return 1
+        if (b.isWin(player) == player | b.isWin(player) == -1) return 1;
+        // else we lost
+        else return 0;
     }
 
     // get all moves for the current board
