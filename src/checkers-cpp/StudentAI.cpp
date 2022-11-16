@@ -51,7 +51,7 @@ Move StudentAI::GetMove(Move move)
 
 // NOTE: make function to create new MCNode and add it to the MCTree
 
-Move mcts()
+Move StudentAI::mcts()
 {
     // make a new MCNode of the current board and add it into the MCTree
     Board copyBoard = board;
@@ -76,7 +76,7 @@ Move mcts()
 
 
 // NOTE: need to keep track of player
-void simulateGames(Board board, MCNode curr)
+void StudentAI::simulateGames(Board board, MCNode curr)
 {
     // if (current node is a leaf node)
         // if s_i != 0
@@ -94,7 +94,7 @@ void simulateGames(Board board, MCNode curr)
 }
 
 
-Board select(MCNode curr)
+Board StudentAI::select(MCNode curr)
 {
     // keep track of the board with the highest UCT
     Board highestBoard;
@@ -118,7 +118,7 @@ Board select(MCNode curr)
 }
 
 
-Board expand(Board b)
+Board StudentAI::expand(Board b)
 {
     // get all possible moves from the current board
 
@@ -131,9 +131,9 @@ Board expand(Board b)
 
 
 // NOTE: need to change the turn for each recursive call of the rollout
-int rollout(Board b, int turn)
+int StudentAI::rollout(Board b, int turn)
 {
-    // if (node is terminal)
+    // if player 1, or 2 wins, or if there is a tie, then
     if (b.isWin(turn) == 1 | b.isWin(turn) == 2 | b.isWin(turn) == -1)
     {
         // if win for us/tie, return 1
@@ -148,56 +148,45 @@ int rollout(Board b, int turn)
         }
     }
 
-    // get all moves for the current board
-    vector<vector<Move> > moves = b.getAllPossibleMoves(turn);
+    // if the game board is terminal
+    if (b.isWin(turn) != 0) {
+        
+    }
 
-    // select a random move
+    // get all moves for the current board
+    vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+
+    // select and make a random move
     int i = rand() % (moves.size());
     vector<Move> checker_moves = moves[i];
     int j = rand() % (checker_moves.size());
     Move choice = checker_moves[j];
-
-    // make selected move on the board
     b.makeMove(choice, turn);
 
-    // change the turn
-    if (turn == 1) turn = 2;
-    else turn = 1;
-
-    // RETURN rollout(board)
-    return rollout(b, turn);
+    return rollout(b, (turn == 1) ? 2 : 1);
 }
 
 
-void backpropagate(int w, MCNode curr)
+void StudentAI::backpropagate(int w, int nodeIdx)
 {
-    // update node's w_i += int
-    curr.w_i += w;
+    MCTree[nodeIdx].w_i += w;
+    MCTree[nodeIdx].s_i += 1;
 
-    // s_i++
-    curr.s_i += 1;
-
-    // if (node is head)
-    //      RETURN
-    if (curr.parentNode == -1)
+    // if no parent, the node is the head
+    if (MCTree[nodeIdx].parentNode == -1)
     {
         return;
     }
     else
     {
-    // else
-        // parent node = get parent node
-        curr = MCTree[curr.parentNode];
-
-        // RETURN backpropagate(int, parent node)
-        return backpropagate(w, curr);
+        return backpropagate(w==1?0:1, MCTree[MCTree[nodeIdx].parentNode]);
     }
 }
 
 
-double calculateUCT(int nodeIdx)
+double StudentAI::calculateUCT(int nodeIdx)
 {
-    // get values for w_i and s_i
+    // get values for current child node w_i and s_i
     double w = MCTree[nodeIdx].w_i;
     double s = MCTree[nodeIdx].s_i;
 
@@ -205,20 +194,7 @@ double calculateUCT(int nodeIdx)
     int parent = MCTree[nodeIdx].parentNode;
     double p = MCTree[parent].s_i;
 
-    // frac = w_i/s_i
-    double frac = w / s;
-
-    // num = ln(s_p)
-    double num = log(p);
-
-    // sq = sqrt(num / s_i)
-    double q = sqrt(num / s);
-
-    // sum = frac + (c * sq)
-    double sum = frac + (c * q);
-
-    // RETURN sum
-    return sum;
+    return (w/s) + (MCTS_UCT_CONS * sqrt(log(p) / s));
 }
 
 
