@@ -3,7 +3,10 @@
     Group members:
         Sumpter, Danielle Lapre, dsumpter, 63383218
         Zhang Jiang, Alexandra, azhangji, 53188999
-    Last Modified: 11/06/2022
+    Last Modified: 11/17/2022
+
+    Notes:
+        - if there is a seg fault, change the indexing from [] to .at() !!!
 ***/
 
 
@@ -76,32 +79,48 @@ Move StudentAI::mcts()
 
 
 // NOTE: need to keep track of player
-void StudentAI::simulateGames(Board board, MCNode curr)
+void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
 {
     // if (current node is a leaf node)
-        // if s_i != 0
-            // curr node = expand(board)
+    if (MCTree[nodeIdx].children.size() == 0)
+    {
+        // if the node has not been visited
+        if (MCTree[nodeIdx].s_i != 0)
+        {
+            nodeIdx = expand(b, nodeIdx, turn);
+        }
 
         // new board = copy of board
+        Board new_board = b;
+
         // int = rollout(new board, player)
+        int w = rollout(new_board, turn, turn);
+
         // backpropagation(int, current node)
+        backpropagate(w, nodeIdx);
 
         // RETURN
-
+        return;
+    }
     // else (if not a leaf node)
+    else
+    {
         // child node = select()
+        int childIdx = select(nodeIdx);
         // RETURN simulateGames(child node)
+        return simulateGames(b, childIdx, turn == 1 ? 2 : 1);
+    }
 }
 
 
-Board StudentAI::select(MCNode curr)
+int StudentAI::select(int nodeIdx)
 {
     // keep track of the board with the highest UCT
-    Board highestBoard;
-    double highestUCT;
+    int favoriteChild = -1;
+    double highestUCT = 0;
 
     // calculate the UCT of the children nodes
-    for (unsigned int c : curr.children)
+    for (unsigned int c : MCTree[nodeIdx].children)
     {
         // find the child node with the highest UCT
         double u = calculateUCT(c);
@@ -109,50 +128,33 @@ Board StudentAI::select(MCNode curr)
         if (u > highestUCT)
         {
             highestUCT = u;
-            highestBoard = MCTree[c].board;
+            favoriteChild = c;
         }
     }
 
     // RETURN the node with the highest UCT
-    return highestBoard;
+    return favoriteChild;
 }
 
 
-Board StudentAI::expand(Board b)
+Board StudentAI::expand(Board b, int parentIdx, int turn)
 {
-    // get all possible moves from the current board
-
     // make each move on a new board, then make a new MCNode for each new board,
     // adding each into the MCTree
-        // save the first new MCNode
+    addMovesToTree(parentIdx, b, turn);
 
-    // RETURN the first new child (aka first new MCNode)
+    return MCTree[parentIdx].children[0];
 }
 
 
 // NOTE: need to change the turn for each recursive call of the rollout
-int StudentAI::rollout(Board b, int turn)
+int StudentAI::rollout(Board b, int turn, int selectedPlayer)
 {
-    // if player 1, or 2 wins, or if there is a tie, then
-    if (b.isWin(turn) == 1 | b.isWin(turn) == 2 | b.isWin(turn) == -1)
-    {
-        // if win for us/tie, return 1
-        if (turn == player && (b.isWin(turn) == turn | b.isWin(turn) == -1))
-        {
-            return 1;
-        }
-        // else if loss for us, return 0
-        else
-        {
-            return 0;
-        }
-    }
-
     // if the game board is terminal
     if (b.isWin(turn) != 0) {
-        // if we win or tie then return 1
-        if (b.isWin(player) == player | b.isWin(player) == -1) return 1;
-        // else we lost
+        // if the selected node wins or ties then return 1
+        if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1) return 1;
+        // else the selected node lost
         else return 0;
     }
 
@@ -166,7 +168,7 @@ int StudentAI::rollout(Board b, int turn)
     Move choice = checker_moves[j];
     b.makeMove(choice, turn);
 
-    return rollout(b, (turn == 1) ? 2 : 1);
+    return rollout(b, turn == 1 ? 2 : 1, selectedPlayer);
 }
 
 
@@ -199,6 +201,36 @@ double StudentAI::calculateUCT(int nodeIdx)
 
     return (w/s) + (MCTS_UCT_CONS * sqrt(log(p) / s));
 }
+
+
+    void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
+    {
+        vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+
+        for (vector<Move> checker_moves : moves)
+        {
+            for (Move m : checker_moves)
+            {
+                Board new_board = b;
+                new_board.makeMove(m, turn);
+
+                // initialize new MCNode
+                MCNode child;
+                child.board = new_board;
+                child.w_i = 0;
+                child.s_i = 0;
+                child.parent = parentIdx;
+                child.parentMove = m;
+
+                // insert the new child MCNode to the tree
+                MCTree.insert(child);
+
+                // insert children index
+                // the children is the last added node into the vector, hence vector.size
+                MCTree[parentIdx].children.insert(MCTree.size()); 
+            }
+        }
+    }
 
 
 

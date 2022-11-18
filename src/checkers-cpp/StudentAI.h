@@ -43,11 +43,23 @@ private: // member variables that we added
 
 private: // Monte Carlo Tree Search algorithm
     Move mcts();
-    void simulateGames(Board board, MCNode curr);
-    Board select(MCNode curr);
-    Board expand(Board b);
-    int rollout(Board b, int turn);
 
+    // simulates an entire game following the monte carlo algorithm steps
+    // selection, expansion, rollout, and backpropagation 
+    void simulateGames(Board board, int nodeIdx, int turn);
+
+    // Selects the children node with the highest UCT value
+    int select(int nodeIdx);
+
+    // Increases the depth of the game tree by one level.
+    // We expand when we reach a leaf node in the MCTree that has 
+    // already been visited 
+    int expand(Board b, int turn);
+
+    // Randomly plays a game until one player win.
+    // returns 1 if the rollout results in a win for the selectedPlayer
+    // or 0 if the player lost
+    int rollout(Board b, int turn, int selectedPlayer);
 
     // updates the w_i and s_i member variables from a given node 
     // PRE-CONDITION: check the player's turn to pass the correct win value
@@ -58,6 +70,9 @@ private: // Monte Carlo Tree Search algorithm
     // The AI will select the move with the highest UCT value
     double calculateUCT(int nodeIdx);
 
+    // given a board state and a player's turn, we calculate all the possible moves 
+    // for the player and we add them to the tree. We also update the parentNode a needed
+    void addMovesToTree(int parentIdx, Board b, int turn)
 
 private: // minimax algorithm
     // returns the utility/heuristic value given the state of the game
