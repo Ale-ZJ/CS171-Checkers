@@ -203,34 +203,34 @@ double StudentAI::calculateUCT(int nodeIdx)
 }
 
 
-    void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
+void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
+{
+    vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+
+    for (vector<Move> checker_moves : moves)
     {
-        vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
-
-        for (vector<Move> checker_moves : moves)
+        for (Move m : checker_moves)
         {
-            for (Move m : checker_moves)
-            {
-                Board new_board = b;
-                new_board.makeMove(m, turn);
+            Board new_board = b;
+            new_board.makeMove(m, turn);
 
-                // initialize new MCNode
-                MCNode child;
-                child.board = new_board;
-                child.w_i = 0;
-                child.s_i = 0;
-                child.parent = parentIdx;
-                child.parentMove = m;
+            // initialize new MCNode
+            MCNode child;
+            child.board = new_board;
+            child.w_i = 0;
+            child.s_i = 0;
+            child.parent = parentIdx;
+            child.parentMove = m;
 
-                // insert the new child MCNode to the tree
-                MCTree.insert(child);
+            // insert the new child MCNode to the tree
+            MCTree.insert(child);
 
-                // insert children index
-                // the children is the last added node into the vector, hence vector.size
-                MCTree[parentIdx].children.insert(MCTree.size()); 
-            }
+            // insert children index
+            // the children is the last added node into the vector, hence vector.size
+            MCTree[parentIdx].children.insert(MCTree.size()); 
         }
     }
+}
 
 
 
