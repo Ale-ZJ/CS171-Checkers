@@ -63,18 +63,36 @@ Move StudentAI::mcts()
     headNode.parentNode = -1;
     MCTree.insert(headNode);
 
-    // get the possible moves from the current board
-
-    // make each move on a new board, then make a new MCNode for each new board,
-    // adding each into the MCTree
+    // get the possible moves from the current board AND make each move on a
+    // new board. then make a new MCNode for each new board, adding each into
+    // the MCTree.
+    expand(board, 0, player);
 
     // do 20 simulations of the game
+    for (int i = 0; i < 20; i++)
+    {
+        // NOTE: will always simulate on the head node and begin with our turn 
+        simulateGames(board, 0, player);
+    }
 
     // calculate the w_i/s_i rate for each possible move from the current board
+    Move bestMove = Move();
+    double highestRate = 0;
 
-    // find the move that results in the highest w_i/s_i
+    for (MCNode n : headNode.children)
+    {
+        double rate = n.w_i / n.s_i;
+
+        // NOTE: if two nodes have the same rate, prefer the first one
+        if (rate > highestRate)
+        {
+            highestRate = rate;
+            bestMove = n.parentMove;
+        }
+    }
 
     // RETURN the highest w_i/s_i move
+    return bestMove;
 }
 
 
