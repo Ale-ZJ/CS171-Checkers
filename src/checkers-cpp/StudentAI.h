@@ -22,6 +22,9 @@ struct MCNode{
     // an index in a vector that holds all nodes
     int parentNode; // -1 if the node is the head
     vector<unsigned int> children;
+
+    MCNode();
+    MCNode(const MCNode& other);
 };
 
 
@@ -54,7 +57,7 @@ private: // Monte Carlo Tree Search algorithm
     // Increases the depth of the game tree by one level.
     // We expand when we reach a leaf node in the MCTree that has 
     // already been visited 
-    int expand(Board b, int turn);
+    int expand(Board b, int parentIdx, int turn);
 
     // Randomly plays a game until one player win.
     // returns 1 if the rollout results in a win for the selectedPlayer
@@ -72,7 +75,7 @@ private: // Monte Carlo Tree Search algorithm
 
     // given a board state and a player's turn, we calculate all the possible moves 
     // for the player and we add them to the tree. We also update the parentNode a needed
-    void addMovesToTree(int parentIdx, Board b, int turn)
+    void addMovesToTree(int parentIdx, Board b, int turn);
 
 private: // minimax algorithm
     // returns the utility/heuristic value given the state of the game
