@@ -85,13 +85,19 @@ Move StudentAI::mcts()
 
     MCTree.push_back(headNode); // NOT DOING ANYTHING
 
+
+    cout << "mcts(): initial tree size is " << MCTree.size() << endl;
+
     // get the possible moves from the current board AND make each move on a
     // new board. then make a new MCNode for each new board, adding each into
     // the MCTree.
     expand(board, 0, player);
 
-    if (MCTree.size() == 1) cout << "mcts(): correct size" << endl;
-    else cout << "mcts(): no node added :(" << endl;
+    cout << "mcts(): after expansion tree size is " << MCTree.size() << endl;
+    cout << "mcts(): head node childrens is " << MCTree.at(0).children.size() << endl;
+
+    // if (MCTree.size() == 0) cout << "mcts(): no node added :((" << endl;
+    // else cout << "mcts(): there is something :o" << endl;
 
     // do 20 simulations of the game
     for (int i = 0; i < 20; i++)
@@ -125,13 +131,19 @@ Move StudentAI::mcts()
 // NOTE: need to keep track of player
 void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
 {
+    cout << "simulateGames(): in" << endl;
+
     // if (current node is a leaf node)
     if (MCTree.at(nodeIdx).children.size() == 0)
     {
+        cout << "simulateGames(): inside if, current node is leaf" << endl;
+
         // if the node has not been visited
         if (MCTree.at(nodeIdx).s_i != 0)
         {
             nodeIdx = expand(b, nodeIdx, turn);
+            
+            cout << "simulateGames(): exp successfull" << endl;
         }
 
         // new board = copy of board
@@ -139,9 +151,11 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
 
         // int = rollout(new board, player)
         int w = rollout(new_board, turn, turn);
+        cout << "simulateGames(): rollout successfull" << endl;
 
         // backpropagation(int, current node)
         backpropagate(w, nodeIdx);
+        cout << "simulateGames(): backpropagate successfull" << endl;
 
         // RETURN
         return;
@@ -149,8 +163,13 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
     // else (if not a leaf node)
     else
     {
+        cout << "simulateGames(): inside else" << endl;
+
         // child node = select()
         int childIdx = select(nodeIdx);
+        
+        cout << "simulateGames(): select successfull" << endl;
+
         // RETURN simulateGames(child node)
         return simulateGames(b, childIdx, turn == 1 ? 2 : 1);
     }
@@ -159,6 +178,8 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
 
 int StudentAI::select(int nodeIdx)
 {
+    cout << "select(): in" << endl;
+
     // keep track of the board with the highest UCT
     int favoriteChild = -1;
     double highestUCT = 0;
@@ -168,6 +189,7 @@ int StudentAI::select(int nodeIdx)
     {
         // find the child node with the highest UCT
         double u = calculateUCT(c);
+        cout << "select() child#" << c << " UCT is " << u << endl;
         
         if (u > highestUCT)
         {
@@ -175,6 +197,8 @@ int StudentAI::select(int nodeIdx)
             favoriteChild = c;
         }
     }
+
+    cout << "select(): favoriteChild is " << favoriteChild << endl;
 
     // RETURN the node with the highest UCT
     return favoriteChild;
@@ -272,7 +296,7 @@ void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
 
             // insert children index
             // the children is the last added node into the vector, hence vector.size
-            MCTree[parentIdx].children.push_back(MCTree.size()); 
+            MCTree[parentIdx].children.push_back(MCTree.size() - 1); 
         }
     }
 }
