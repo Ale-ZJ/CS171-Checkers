@@ -73,8 +73,6 @@ private: // Monte Carlo Tree Search algorithm
     // The AI will select the move with the highest UCT value
     double calculateUCT(int nodeIdx);
 
-    void makeRandomMove(Board b, int turn);
-
     MCNode makeNewMCNode(Board b, Move parentMove, int parentIdx);
 
     // given a board state and a player's turn, we calculate all the possible moves 
