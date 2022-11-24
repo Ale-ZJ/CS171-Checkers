@@ -73,18 +73,19 @@ Move StudentAI::GetMove(Move move)
 
 Move StudentAI::mcts()
 {
-    // make a new MCNode of the current board and add it into the MCTree
-    Board copyBoard = board;
-    MCNode headNode;
-    headNode.board = copyBoard;
-    headNode.w_i = 0;
-    headNode.s_i = 0;
-    headNode.parentMove = Move();
-    headNode.parentNode = -1;
-    headNode.children = {};
+    // make a new MCNode of the current board
+    MCNode headNode = makeNewMCNode(board, Move(), -1);
+    // Board copyBoard = board;
+    // MCNode headNode;
+    // headNode.board = copyBoard;
+    // headNode.w_i = 0;
+    // headNode.s_i = 0;
+    // headNode.parentMove = Move();
+    // headNode.parentNode = -1;
+    // headNode.children = {};
 
-    MCTree.push_back(headNode); // NOT DOING ANYTHING
-
+    // add the head node to the MCTree
+    MCTree.push_back(headNode);
 
     cout << "mcts(): initial tree size is " << MCTree.size() << endl;
 
@@ -111,7 +112,8 @@ Move StudentAI::mcts()
     Move bestMove = Move();
     double highestRate = 0;
 
-    for (unsigned int n : headNode.children)
+    // for (unsigned int n : headNode.children)
+    for (unsigned int n : MCTree.at(0).children)
     {
         double rate = MCTree.at(n).w_i / MCTree.at(n).s_i;
 
@@ -143,7 +145,7 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
         {
             nodeIdx = expand(b, nodeIdx, turn);
             
-            cout << "simulateGames(): exp successfull" << endl;
+            cout << "simulateGames(): exp successful" << endl;
         }
 
         // new board = copy of board
@@ -151,11 +153,11 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
 
         // int = rollout(new board, player)
         int w = rollout(new_board, turn, turn);
-        cout << "simulateGames(): rollout successfull" << endl;
+        cout << "simulateGames(): rollout successful" << endl;
 
         // backpropagation(int, current node)
         backpropagate(w, nodeIdx);
-        cout << "simulateGames(): backpropagate successfull" << endl;
+        cout << "simulateGames(): backpropagate successful" << endl;
 
         // RETURN
         return;
@@ -168,10 +170,10 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
         // child node = select()
         int childIdx = select(nodeIdx);
         
-        cout << "simulateGames(): select successfull" << endl;
+        cout << "simulateGames(): select successful" << endl;
 
         // RETURN simulateGames(child node)
-        return simulateGames(b, childIdx, turn == 1 ? 2 : 1);
+        return simulateGames(b, childIdx, turn == 1?2:1);
     }
 }
 
@@ -181,7 +183,8 @@ int StudentAI::select(int nodeIdx)
     cout << "select(): in" << endl;
 
     // keep track of the board with the highest UCT
-    int favoriteChild = -1;
+    // default favorite child is the first one
+    int favoriteChild = MCTree.at(nodeIdx).children.at(0);
     double highestUCT = 0;
 
     // calculate the UCT of the children nodes
@@ -209,7 +212,7 @@ int StudentAI::expand(Board b, int parentIdx, int turn)
 {
     // make each move on a new board, then make a new MCNode for each new board,
     // adding each into the MCTree
-    addMovesToTree(parentIdx, b, turn);
+    addMovesToTree(b, parentIdx, turn);
 
     return MCTree.at(parentIdx).children.at(0);
 }
@@ -236,7 +239,7 @@ int StudentAI::rollout(Board b, int turn, int selectedPlayer)
     Move choice = checker_moves[j];
     b.makeMove(choice, turn);
 
-    return rollout(b, turn == 1 ? 2 : 1, selectedPlayer);
+    return rollout(b, turn == 1?2:1, selectedPlayer);
 }
 
 
@@ -263,16 +266,41 @@ double StudentAI::calculateUCT(int nodeIdx)
     // get values for current child node w_i and s_i
     double w = MCTree.at(nodeIdx).w_i;
     double s = MCTree.at(nodeIdx).s_i;
+    cout << "w, s pair is " << w << " / " << s << endl;
 
     // access parent node and get s_p
     int parent = MCTree.at(nodeIdx).parentNode;
     double p = MCTree.at(parent).s_i;
+    cout << "s_p value is " << p << endl;
 
-    return (w/s) + (MCTS_UCT_CONS * sqrt(log(p) / s));
+    double w_div_s = double(w) / s;
+    cout << "w / s is " << w_div_s << endl;
+
+    double l_div_s = log(p) / s;
+    cout << "log(s_p) / s is " << l_div_s << endl;
+
+    return w_div_s + (MCTS_UCT_CONS * sqrt(l_div_s));
 }
 
 
-void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
+// NEW
+MCNode StudentAI::makeNewMCNode(Board b, Move parentMove, int parentIdx)
+{
+    Board copyBoard = board;
+    MCNode newNode;
+
+    newNode.board = copyBoard;
+    newNode.w_i = 0;
+    newNode.s_i = 0;
+    newNode.parentMove = parentMove;
+    newNode.parentNode = parentIdx;
+    newNode.children = {};
+
+    return newNode;
+}
+
+
+void StudentAI::addMovesToTree(Board b, int parentIdx, int turn)
 {
     vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
 
@@ -284,12 +312,13 @@ void StudentAI::addMovesToTree(int parentIdx, Board b, int turn)
             new_board.makeMove(m, turn);
 
             // initialize new MCNode
-            MCNode child;
-            child.board = new_board;
-            child.w_i = 0;
-            child.s_i = 0;
-            child.parentNode = parentIdx;
-            child.parentMove = m;
+            MCNode child = makeNewMCNode(new_board, m, parentIdx);
+            // MCNode child;
+            // child.board = new_board;
+            // child.w_i = 0;
+            // child.s_i = 0;
+            // child.parentNode = parentIdx;
+            // child.parentMove = m;
 
             // insert the new child MCNode to the tree
             MCTree.push_back(child);
