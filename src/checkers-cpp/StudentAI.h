@@ -41,6 +41,7 @@ public: // given code DO NOT CHANGE
 private: // member variables that we added
     const int MINIMAX_DEPTH = 3;
     const int MCTS_UCT_CONS = 2;
+    const int NUMBER_OF_SIMULATIONS = 25;
     vector<MCNode> MCTree;
 
 
