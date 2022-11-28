@@ -9,6 +9,7 @@
 struct MinimaxPair{
     int value; 
     Move move;
+    int win;
 };
 
 
@@ -41,7 +42,7 @@ public: // given code DO NOT CHANGE
 private: // member variables that we added
     const int MINIMAX_DEPTH = 3;
     const int MCTS_UCT_CONS = 2;
-    const int NUMBER_OF_SIMULATIONS = 25;
+    const int NUMBER_OF_SIMULATIONS = 5;
     vector<MCNode> MCTree;
 
 
@@ -63,7 +64,7 @@ private: // Monte Carlo Tree Search algorithm
     // Randomly plays a game until one player win.
     // returns 1 if the rollout results in a win for the selectedPlayer
     // or 0 if the player lost
-    int rollout(Board b, int turn, int selectedPlayer);
+    int rollout(Board b, int selectedPlayer);
 
     // updates the w_i and s_i member variables from a given node 
     // PRE-CONDITION: check the player's turn to pass the correct win value
@@ -85,11 +86,11 @@ private: // minimax algorithm
     int evaluate(Board board);
 
     // recursive algorithm to pick best move
-    Move minimax(int depth, Board board, int minimaxPlayer);
+    int minimax(Board board, int minimaxPlayer);
 
     //pair<int, Move> evalMin(int depth, Board board, int maxPlayer);
-    MinimaxPair evalMax(int depth, Board board, int maxPlayer);
-    MinimaxPair evalMin(int depth, Board board, int minPlayer);
+    MinimaxPair evalMax(Board board, int maxPlayer, int selectedPlayer);
+    MinimaxPair evalMin(Board board, int minPlayer, int selectedPlayer);
 };
 
 #endif //STUDENTAI_H

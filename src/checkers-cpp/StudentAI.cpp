@@ -52,14 +52,15 @@ Move StudentAI::GetMove(Move move)
         board.makeMove(move, player == 1?2:1);
     }
 
+    // cout << "AI is player number " << player << endl;
     // Move res = minimax(MINIMAX_DEPTH, board, player); 
     MCTree = vector<MCNode>();
     Move res = mcts();
 
-    cout << "getMove(): hi 0" << endl;
+    // cout << "getMove(): hi 0" << endl;
     // make the chosen move
     board.makeMove(res, player);
-    cout << "getMove(): hi 1" << endl;
+    // cout << "getMove(): hi 1" << endl;
 
     // return the chosen move to the opponent
     return res;
@@ -76,44 +77,31 @@ Move StudentAI::mcts()
     // make a new MCNode of the current board
     MCNode headNode = makeNewMCNode(board, Move(), -1);
 
-
     // add the head node to the MCTree
     MCTree.push_back(headNode);
-
-    cout << "mcts(): initial tree size is " << MCTree.size() << endl;
 
     // get the possible moves from the current board AND make each move on a
     // new board. then make a new MCNode for each new board, adding each into
     // the MCTree.
     expand(board, 0, player);
 
-    cout << "mcts(): after expansion tree size is " << MCTree.size() << endl;
-    cout << "mcts(): head node has " << MCTree.at(0).children.size() << "children" << endl;
-
-    // if (MCTree.size() == 0) cout << "mcts(): no node added :((" << endl;
-    // else cout << "mcts(): there is something :o" << endl;
-
     // do 20 simulations of the game
     for (int i = 0; i < NUMBER_OF_SIMULATIONS; i++)
     {
         // NOTE: will always simulate on the head node and begin with our turn 
-        simulateGames(board, 0, player);
-        cout << "mcts(): " << i << "th game simulation successfull!" << endl;
+        simulateGames(board, 0, player == 1?2:1);
     }
 
     // calculate the w_i/s_i rate for each possible move from the current board
     Move bestMove = Move();
     double highestRate = 0;
-
-    cout << "mcts(): here 0" << endl;
     
     // for (unsigned int n : headNode.children)
     for (unsigned int n : MCTree.at(0).children)
     {
-        
-        cout << "mcts(): child#" << n << " w/s is " << MCTree.at(n).w_i << "/" << MCTree.at(n).s_i << endl;
+        // cout << "mcts(): child#" << n << " w/s is " << MCTree.at(n).w_i << "/" << MCTree.at(n).s_i << endl;
            
-        double rate = (double) MCTree.at(n).w_i / MCTree.at(n).s_i; 
+        double rate = (double) MCTree.at(n).w_i / MCTree.at(n).s_i;
         
         // NOTE: if two nodes have the same rate, prefer the first one
         if (rate > highestRate)
@@ -124,8 +112,7 @@ Move StudentAI::mcts()
         
     }
     
-    cout << "mcts(): here 1" << endl;
-    cout << "mcts(): best move is " << bestMove.toString() << endl;
+    // cout << "mcts(): best move is " << bestMove.toString() << endl;
 
     // RETURN the highest w_i/s_i move
     return bestMove;
@@ -138,26 +125,27 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
     // if (current node is a leaf node)
     if (MCTree.at(nodeIdx).children.size() == 0)
     {
-        cout << "simulateGames(): inside if, current node is leaf" << endl;
+        // cout << "simulateGames(): inside if, current node is leaf" << endl;
 
         // if the node has not been visited
         if (MCTree.at(nodeIdx).s_i != 0)
         {
             nodeIdx = expand(b, nodeIdx, turn);
             
-            cout << "simulateGames(): exp successful" << endl;
+            // cout << "simulateGames(): exp successful" << endl;
         }
 
         // new board = copy of board
         Board new_board = b;
 
         // int = rollout(new board, player)
-        int w = rollout(new_board, turn, turn);
-        cout << "simulateGames(): rollout successful and win is " << w << endl;
+        int w = rollout(new_board, turn);
+        // cout << "returned val: " << w << endl;
+        // cout << "simulateGames(): rollout successful and win is " << w << endl;
 
         // backpropagation(int, current node)
         backpropagate(w, nodeIdx);
-        cout << "simulateGames(): backpropagate successful" << endl;
+        // cout << "simulateGames(): backpropagate successful" << endl;
 
         // RETURN
         return;
@@ -165,12 +153,12 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
     // else (if not a leaf node)
     else
     {
-        cout << "simulateGames(): inside else" << endl;
+        // cout << "simulateGames(): inside else" << endl;
 
         // child node = select()
         int childIdx = select(nodeIdx);
         
-        cout << "simulateGames(): select successful" << endl;
+        // cout << "simulateGames(): select successful" << endl;
 
         // RETURN simulateGames(child node)
         return simulateGames(b, childIdx, turn == 1?2:1);
@@ -190,7 +178,7 @@ int StudentAI::select(int nodeIdx)
     {
         // find the child node with the highest UCT
         double u = calculateUCT(c);
-        cout << "select() child#" << c << " UCT is " << u << endl;
+        // cout << "select() child#" << c << " UCT is " << u << endl;
         
         if (u > highestUCT)
         {
@@ -199,7 +187,7 @@ int StudentAI::select(int nodeIdx)
         }
     }
 
-    cout << "select(): favoriteChild is " << favoriteChild << endl;
+    // cout << "select(): favoriteChild is " << favoriteChild << endl;
 
     // RETURN the node with the highest UCT
     return favoriteChild;
@@ -216,27 +204,43 @@ int StudentAI::expand(Board b, int parentIdx, int turn)
 }
 
 
-int StudentAI::rollout(Board b, int turn, int selectedPlayer)
+int StudentAI::rollout(Board b, int selectedPlayer)
 {
-    // if the game board is terminal
-    if (b.isWin(turn) != 0) {
-        // if the selected node wins or ties then return 1
-        if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1) return 1;
-        // else the selected node lost
-        else return 0;
-    }
+    // // cout << "rollout on player: " << turn << endl;
 
-    // get all moves for the current board
-    vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+    // // if the game board is terminal
+    // if (b.isWin(turn) != 0) {
+    //     // if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1)
+    //     // {
+    //     //     cout << "win for player: " << selectedPlayer << endl;
+    //     // }
+    //     // else
+    //     // {
+    //     //     cout << "loss for player: " << selectedPlayer << endl;
+    //     // }
 
-    // select and make a random move
-    int i = rand() % (moves.size());
-    vector<Move> checker_moves = moves[i];
-    int j = rand() % (checker_moves.size());
-    Move choice = checker_moves[j];
-    b.makeMove(choice, turn);
+    //     // if the selected node wins or ties then return 1
+    //     if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1) return 1;
+    //     // else the selected node lost
+    //     else return 0;
+    // }
 
-    return rollout(b, turn == 1?2:1, selectedPlayer);
+    // // get all moves for the current board
+    // vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+
+    // // select and make a random move
+    // int i = rand() % (moves.size());
+    // vector<Move> checker_moves = moves[i];
+    // int j = rand() % (checker_moves.size());
+    // Move choice = checker_moves[j];
+    // b.makeMove(choice, turn);
+
+    // // Move m = minimax(5, b, turn);
+    // // b.makeMove(choice, turn);
+
+    // return rollout(b, turn == 1?2:1, selectedPlayer);
+
+    return minimax(b, selectedPlayer);
 }
 
 
@@ -343,91 +347,120 @@ void StudentAI::addMovesToTree(Board b, int parentIdx, int turn)
 // ---------------- MINIMAX ALGORITHM  ------------------
 
 
-// // returns the difference in number of pieces
-// int StudentAI::evaluate(Board board)
-// {
-//     if (player == 2) return board.whiteCount - board.blackCount;
-//     else return board.blackCount - board.whiteCount;
-// }
+// returns the difference in number of pieces
+int StudentAI::evaluate(Board board)
+{
+    if (player == 2) return board.whiteCount - board.blackCount;
+    else return board.blackCount - board.whiteCount;
+}
 
 
-// Move StudentAI::minimax(int depth, Board board, int minimaxPlayer)
-// {
-//     return evalMax(depth, board, minimaxPlayer).move;
-// }
+int StudentAI::minimax(Board board, int minimaxPlayer)
+{
+    return evalMax(board, minimaxPlayer, minimaxPlayer).win;    
+}
 
 
-// MinimaxPair StudentAI::evalMax(int depth, Board board, int maxPlayer)
-// {
-//     // check if the game terminates because of the opponent's move
-//     // in which case, there is no more move for us to make, OR
-//     // check if we have reached the desired recursive depth
-//     if(depth == 0 || board.isWin(1) || board.isWin(2))
-//     {
-//         return MinimaxPair{evaluate(board), Move()};
-//     }
+MinimaxPair StudentAI::evalMax(Board board, int maxPlayer, int selectedPlayer)
+{
+    // check if the game terminates because of the opponent's move
+    // in which case, there is no more move for us to make, OR
+    // check if we have reached the desired recursive depth
+    // if(depth == 0 || board.isWin(1) || board.isWin(2))
+    // {
+    //     return MinimaxPair{evaluate(board), Move()};
+    // }
+    if (board.isWin(selectedPlayer) != 0)
+    {
+        // if the selected node wins or ties then return 1
+        if (board.isWin(selectedPlayer) == selectedPlayer | board.isWin(selectedPlayer) == -1)
+        {
+            return MinimaxPair{evaluate(board), Move(), 1};
+        }
+        // else the selected node lost
+        else
+        {
+            return MinimaxPair{evaluate(board), Move(), 0};
+        }
 
-//     // keep track of the highest minimax evaluation value
-//     // max player takes the move with the highest value
-//     MinimaxPair maxValue_bestMove{numeric_limits<int>::min(), Move()};
+    }
 
-//     // getting all the possible moves for a given player
-//     vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
+    // keep track of the highest minimax evaluation value
+    // max player takes the move with the highest value
+    MinimaxPair maxValue_bestMove{numeric_limits<int>::min(), Move(), 0};
 
-//     for (vector<Move> checker_moves : moves)
-//     {
-//         for (Move m : checker_moves)
-//         {
-//             Board new_board = board;
-//             new_board.makeMove(m, maxPlayer);
-//             MinimaxPair v2_m2 = evalMin(depth-1, new_board, maxPlayer == 2?1:2);
+    // getting all the possible moves for a given player
+    vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
 
-//             if (v2_m2.value > maxValue_bestMove.value) 
-//             {
-//                 maxValue_bestMove.value = v2_m2.value;
-//                 maxValue_bestMove.move  = m;
-//             }
-//         }
-//     } 
+    for (int i = 0; i < moves.size(); i+=8)
+    {
+        for (int j = 0; j < moves[i].size(); j+=8)
+        {
+            Board new_board = board;
+            new_board.makeMove(moves[i][j], maxPlayer);
+            MinimaxPair v2_m2 = evalMin(new_board, maxPlayer == 2?1:2, selectedPlayer);
 
-//     return maxValue_bestMove;
-// }
+            if (v2_m2.value > maxValue_bestMove.value) 
+            {
+                maxValue_bestMove.value = v2_m2.value;
+                maxValue_bestMove.move  = moves[i][j];
+                maxValue_bestMove.win = v2_m2.win;
+            }
+        }
+    } 
+
+    return maxValue_bestMove;
+}
 
 
-// MinimaxPair StudentAI::evalMin(int depth, Board board, int minPlayer)
-// {
-//     // check if the game terminates because of the opponent's move
-//     // in which case, there is no more move for us to make, OR
-//     // check if we have reached the desired recursive depth
-//     if(depth == 0 || board.isWin(1) || board.isWin(2))
-//     {
-//         return MinimaxPair{evaluate(board), Move()};
-//     }
+MinimaxPair StudentAI::evalMin(Board board, int minPlayer, int selectedPlayer)
+{
+    // check if the game terminates because of the opponent's move
+    // in which case, there is no more move for us to make, OR
+    // check if we have reached the desired recursive depth
+    // if(depth == 0 || board.isWin(1) || board.isWin(2))
+    // {
+    //     return MinimaxPair{evaluate(board), Move()};
+    // }
+    if (board.isWin(selectedPlayer) != 0)
+    {
+        // if the selected node wins or ties then return 1
+        if (board.isWin(selectedPlayer) == selectedPlayer | board.isWin(selectedPlayer) == -1)
+        {
+            return MinimaxPair{evaluate(board), Move(), 1};
+        }
+        // else the selected node lost
+        else
+        {
+            return MinimaxPair{evaluate(board), Move(), 0};
+        }
+    }
 
-//     // keep track of the highest minimax evaluation value
-//     // max player takes the move with the highest value
-//     MinimaxPair minValue_bestMove{numeric_limits<int>::max(), Move()};
+    // keep track of the highest minimax evaluation value
+    // max player takes the move with the highest value
+    MinimaxPair minValue_bestMove{numeric_limits<int>::max(), Move()};
 
-//     // getting all the possible moves for a given player
-//     vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
+    // getting all the possible moves for a given player
+    vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
 
-//     for (vector<Move> checker_moves : moves)
-//     {
-//         for (Move m : checker_moves)
-//         {
-//             Board new_board = board;
-//             new_board.makeMove(m, minPlayer);
-//             MinimaxPair v2_m2 = evalMax(depth-1, new_board, minPlayer == 1?2:1);
+    for (int i = 0; i < moves.size(); i+=8)
+    {
+        for (int j = 0; j < moves[i].size(); j+=8)
+        {
+            Board new_board = board;
+            new_board.makeMove(moves[i][j], minPlayer);
+            MinimaxPair v2_m2 = evalMax(new_board, minPlayer == 1?2:1, selectedPlayer);
 
-//             if (v2_m2.value < minValue_bestMove.value) 
-//             {
-//                 minValue_bestMove.value = v2_m2.value;
-//                 minValue_bestMove.move  = m;
-//             }
-//         }
-//     } 
+            if (v2_m2.value < minValue_bestMove.value) 
+            {
+                minValue_bestMove.value = v2_m2.value;
+                minValue_bestMove.move  = moves[i][j];
+                minValue_bestMove.win = v2_m2.win;
+            }
+        }
+    } 
 
-//     return minValue_bestMove;
-// }
+    return minValue_bestMove;
+}
 
     
