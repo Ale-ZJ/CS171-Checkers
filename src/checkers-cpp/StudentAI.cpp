@@ -103,7 +103,7 @@ Move StudentAI::mcts()
     {
         // cout << "mcts(): child#" << n << " w/s is " << MCTree.at(n).w_i << "/" << MCTree.at(n).s_i << endl;
            
-        double rate = (double) MCTree.at(n).w_i / MCTree.at(n).s_i;
+        double rate = calculateUCT(n);
         
         // NOTE: if two nodes have the same rate, prefer the first one
         if (rate >= highestRate)
@@ -206,43 +206,43 @@ int StudentAI::expand(Board b, int parentIdx, int turn)
 }
 
 
-int StudentAI::rollout(Board b, int selectedPlayer)
+int StudentAI::rollout(Board b, int turn, int selectedPlayer)
 {
     // // cout << "rollout on player: " << turn << endl;
 
-    // // if the game board is terminal
-    // if (b.isWin(turn) != 0) {
-    //     // if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1)
-    //     // {
-    //     //     cout << "win for player: " << selectedPlayer << endl;
-    //     // }
-    //     // else
-    //     // {
-    //     //     cout << "loss for player: " << selectedPlayer << endl;
-    //     // }
+    // if the game board is terminal
+    if (b.isWin(turn) != 0) {
+        // if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1)
+        // {
+        //     cout << "win for player: " << selectedPlayer << endl;
+        // }
+        // else
+        // {
+        //     cout << "loss for player: " << selectedPlayer << endl;
+        // }
 
-    //     // if the selected node wins or ties then return 1
-    //     if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1) return 1;
-    //     // else the selected node lost
-    //     else return 0;
-    // }
+        // if the selected node wins or ties then return 1
+        if (b.isWin(turn==1?2:1) == selectedPlayer | b.isWin(turn==1?2:1) == -1) return 1;
+        // else the selected node lost
+        else return 0;
+    }
 
-    // // get all moves for the current board
-    // vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+    // get all moves for the current board
+    vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
 
-    // // select and make a random move
-    // int i = rand() % (moves.size());
-    // vector<Move> checker_moves = moves[i];
-    // int j = rand() % (checker_moves.size());
-    // Move choice = checker_moves[j];
+    // select and make a random move
+    int i = rand() % (moves.size());
+    vector<Move> checker_moves = moves[i];
+    int j = rand() % (checker_moves.size());
+    Move choice = checker_moves[j];
+    b.makeMove(choice, turn);
+
+    // Move m = minimax(5, b, turn);
     // b.makeMove(choice, turn);
 
-    // // Move m = minimax(5, b, turn);
-    // // b.makeMove(choice, turn);
+    return rollout(b, turn == 1?2:1, selectedPlayer);
 
-    // return rollout(b, turn == 1?2:1, selectedPlayer);
-
-    return minimax(b, selectedPlayer, MINIMAX_DEPTH);
+    // return minimax(b, selectedPlayer, MINIMAX_DEPTH);
 }
 
 

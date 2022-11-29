@@ -39,9 +39,9 @@ public: // given code DO NOT CHANGE
 
 
 private: // member variables that we added
-    const int MINIMAX_DEPTH = 4;
+    const int MINIMAX_DEPTH = 3;
     const int MCTS_UCT_CONS = 2;
-    const int NUMBER_OF_SIMULATIONS = 10;
+    const int NUMBER_OF_SIMULATIONS = 100;
     vector<MCNode> MCTree;
 
 
@@ -63,7 +63,7 @@ private: // Monte Carlo Tree Search algorithm
     // Randomly plays a game until one player win.
     // returns 1 if the rollout results in a win for the selectedPlayer
     // or 0 if the player lost
-    int rollout(Board b, int selectedPlayer);
+    int rollout(Board b, int turn, int selectedPlayer);
 
     // updates the w_i and s_i member variables from a given node 
     // PRE-CONDITION: check the player's turn to pass the correct win value
