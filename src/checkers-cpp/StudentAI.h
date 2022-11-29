@@ -9,7 +9,6 @@
 struct MinimaxPair{
     int value; 
     Move move;
-    int win;
 };
 
 
@@ -40,9 +39,9 @@ public: // given code DO NOT CHANGE
 
 
 private: // member variables that we added
-    const int MINIMAX_DEPTH = 3;
+    const int MINIMAX_DEPTH = 4;
     const int MCTS_UCT_CONS = 2;
-    const int NUMBER_OF_SIMULATIONS = 5;
+    const int NUMBER_OF_SIMULATIONS = 10;
     vector<MCNode> MCTree;
 
 
@@ -86,11 +85,11 @@ private: // minimax algorithm
     int evaluate(Board board);
 
     // recursive algorithm to pick best move
-    int minimax(Board board, int minimaxPlayer);
+    int minimax(Board board, int minimaxPlayer, int depth);
 
     //pair<int, Move> evalMin(int depth, Board board, int maxPlayer);
-    MinimaxPair evalMax(Board board, int maxPlayer, int selectedPlayer);
-    MinimaxPair evalMin(Board board, int minPlayer, int selectedPlayer);
+    int evalMax(Board board, int maxPlayer, int selectedPlayer, int depth, int alpha, int beta);
+    int evalMin(Board board, int minPlayer, int selectedPlayer, int depth, int alpha, int beta);
 };
 
 #endif //STUDENTAI_H

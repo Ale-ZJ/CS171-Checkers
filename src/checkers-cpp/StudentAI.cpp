@@ -93,7 +93,9 @@ Move StudentAI::mcts()
     }
 
     // calculate the w_i/s_i rate for each possible move from the current board
+    // Move bestMove = MCTree.at(0).children.at(0).parentMove;
     Move bestMove = Move();
+    // double highestRate = (double) MCTree.at(0).children.at(0).w_i / MCTree.at(0).children.at(0).s_i;
     double highestRate = 0;
     
     // for (unsigned int n : headNode.children)
@@ -104,7 +106,7 @@ Move StudentAI::mcts()
         double rate = (double) MCTree.at(n).w_i / MCTree.at(n).s_i;
         
         // NOTE: if two nodes have the same rate, prefer the first one
-        if (rate > highestRate)
+        if (rate >= highestRate)
         {
             highestRate = rate;
             bestMove = MCTree.at(n).parentMove;
@@ -240,7 +242,7 @@ int StudentAI::rollout(Board b, int selectedPlayer)
 
     // return rollout(b, turn == 1?2:1, selectedPlayer);
 
-    return minimax(b, selectedPlayer);
+    return minimax(b, selectedPlayer, MINIMAX_DEPTH);
 }
 
 
@@ -355,13 +357,16 @@ int StudentAI::evaluate(Board board)
 }
 
 
-int StudentAI::minimax(Board board, int minimaxPlayer)
+int StudentAI::minimax(Board board, int minimaxPlayer, int depth)
 {
-    return evalMax(board, minimaxPlayer, minimaxPlayer).win;    
+    int heuristic_val = evalMax(board, minimaxPlayer, minimaxPlayer, depth, numeric_limits<int>::min(), numeric_limits<int>::max());
+
+    if (heuristic_val <= 0) return 0;
+    else return 1;
 }
 
 
-MinimaxPair StudentAI::evalMax(Board board, int maxPlayer, int selectedPlayer)
+int StudentAI::evalMax(Board board, int maxPlayer, int selectedPlayer, int depth, int alpha, int beta)
 {
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
@@ -370,50 +375,40 @@ MinimaxPair StudentAI::evalMax(Board board, int maxPlayer, int selectedPlayer)
     // {
     //     return MinimaxPair{evaluate(board), Move()};
     // }
-    if (board.isWin(selectedPlayer) != 0)
-    {
-        // if the selected node wins or ties then return 1
-        if (board.isWin(selectedPlayer) == selectedPlayer | board.isWin(selectedPlayer) == -1)
-        {
-            return MinimaxPair{evaluate(board), Move(), 1};
-        }
-        // else the selected node lost
-        else
-        {
-            return MinimaxPair{evaluate(board), Move(), 0};
-        }
-
-    }
+    if (board.isWin(selectedPlayer) != 0 || depth == 0) return evaluate(board);
 
     // keep track of the highest minimax evaluation value
     // max player takes the move with the highest value
-    MinimaxPair maxValue_bestMove{numeric_limits<int>::min(), Move(), 0};
+    int best = numeric_limits<int>::min();
 
     // getting all the possible moves for a given player
     vector<vector<Move>> moves = board.getAllPossibleMoves(maxPlayer);
 
-    for (int i = 0; i < moves.size(); i+=8)
+    for (int i = 0; i < moves.size(); i++)
     {
-        for (int j = 0; j < moves[i].size(); j+=8)
+        for (int j = 0; j < moves[i].size(); j++)
         {
             Board new_board = board;
             new_board.makeMove(moves[i][j], maxPlayer);
-            MinimaxPair v2_m2 = evalMin(new_board, maxPlayer == 2?1:2, selectedPlayer);
+            int val = evalMin(new_board, maxPlayer == 2?1:2, selectedPlayer, depth-1, alpha, beta);
 
-            if (v2_m2.value > maxValue_bestMove.value) 
+            // alpha-beta
+            best = max(best, val);
+            alpha = max(alpha, best);
+
+            // if PRUNING
+            if (beta <= alpha)
             {
-                maxValue_bestMove.value = v2_m2.value;
-                maxValue_bestMove.move  = moves[i][j];
-                maxValue_bestMove.win = v2_m2.win;
+                return best;
             }
         }
-    } 
+    }
 
-    return maxValue_bestMove;
+    return best;
 }
 
 
-MinimaxPair StudentAI::evalMin(Board board, int minPlayer, int selectedPlayer)
+int StudentAI::evalMin(Board board, int minPlayer, int selectedPlayer, int depth, int alpha, int beta)
 {
     // check if the game terminates because of the opponent's move
     // in which case, there is no more move for us to make, OR
@@ -422,45 +417,36 @@ MinimaxPair StudentAI::evalMin(Board board, int minPlayer, int selectedPlayer)
     // {
     //     return MinimaxPair{evaluate(board), Move()};
     // }
-    if (board.isWin(selectedPlayer) != 0)
-    {
-        // if the selected node wins or ties then return 1
-        if (board.isWin(selectedPlayer) == selectedPlayer | board.isWin(selectedPlayer) == -1)
-        {
-            return MinimaxPair{evaluate(board), Move(), 1};
-        }
-        // else the selected node lost
-        else
-        {
-            return MinimaxPair{evaluate(board), Move(), 0};
-        }
-    }
+    if (board.isWin(selectedPlayer) != 0 || depth == 0) return evaluate(board);
 
     // keep track of the highest minimax evaluation value
     // max player takes the move with the highest value
-    MinimaxPair minValue_bestMove{numeric_limits<int>::max(), Move()};
+    int best = numeric_limits<int>::max();
 
     // getting all the possible moves for a given player
     vector<vector<Move>> moves = board.getAllPossibleMoves(minPlayer);
 
-    for (int i = 0; i < moves.size(); i+=8)
+    for (int i = 0; i < moves.size(); i++)
     {
-        for (int j = 0; j < moves[i].size(); j+=8)
+        for (int j = 0; j < moves[i].size(); j++)
         {
             Board new_board = board;
             new_board.makeMove(moves[i][j], minPlayer);
-            MinimaxPair v2_m2 = evalMax(new_board, minPlayer == 1?2:1, selectedPlayer);
+            int val = evalMax(new_board, minPlayer == 1?2:1, selectedPlayer, depth-1, alpha, beta);
 
-            if (v2_m2.value < minValue_bestMove.value) 
+            // alpha-beta
+            best = min(best, val);
+            alpha = min(beta, best);
+
+            // if PRUNING
+            if (beta <= alpha)
             {
-                minValue_bestMove.value = v2_m2.value;
-                minValue_bestMove.move  = moves[i][j];
-                minValue_bestMove.win = v2_m2.win;
+                return best;
             }
         }
-    } 
+    }
 
-    return minValue_bestMove;
+    return best;
 }
 
     
