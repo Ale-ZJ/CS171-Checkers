@@ -130,7 +130,7 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
         // cout << "simulateGames(): inside if, current node is leaf" << endl;
 
         // if the node has not been visited
-        if (MCTree.at(nodeIdx).s_i != 0)
+        if (MCTree.at(nodeIdx).s_i == 10)
         {
             nodeIdx = expand(b, nodeIdx, turn);
             
@@ -141,7 +141,7 @@ void StudentAI::simulateGames(Board b, int nodeIdx, int turn)
         Board new_board = b;
 
         // int = rollout(new board, player)
-        int w = rollout(new_board, turn);
+        int w = rollout(new_board, turn, turn);
         // cout << "returned val: " << w << endl;
         // cout << "simulateGames(): rollout successful and win is " << w << endl;
 
@@ -196,6 +196,8 @@ int StudentAI::select(int nodeIdx)
 }
 
 
+// it works better if you only expand when a node is considered "mature"
+// (having a threshold that considers a node "mature")
 int StudentAI::expand(Board b, int parentIdx, int turn)
 {
     // make each move on a new board, then make a new MCNode for each new board,
@@ -206,46 +208,65 @@ int StudentAI::expand(Board b, int parentIdx, int turn)
 }
 
 
+// rather than using isWin() a better evaluation of the end of the game is to check
+// if we have no more moves
+
+// could use a heuristic after a certain amount of rollouts
 int StudentAI::rollout(Board b, int turn, int selectedPlayer)
 {
-    // // cout << "rollout on player: " << turn << endl;
+    // // // cout << "rollout on player: " << turn << endl;
 
-    // if the game board is terminal
-    if (b.isWin(turn) != 0) {
-        // if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1)
-        // {
-        //     cout << "win for player: " << selectedPlayer << endl;
-        // }
-        // else
-        // {
-        //     cout << "loss for player: " << selectedPlayer << endl;
-        // }
+    // // if the game board is terminal
+    // if (b.isWin(turn) != 0) {
+    //     // if (b.isWin(selectedPlayer) == selectedPlayer | b.isWin(selectedPlayer) == -1)
+    //     // {
+    //     //     cout << "win for player: " << selectedPlayer << endl;
+    //     // }
+    //     // else
+    //     // {
+    //     //     cout << "loss for player: " << selectedPlayer << endl;
+    //     // }
 
-        // if the selected node wins or ties then return 1
-        if (b.isWin(turn==1?2:1) == selectedPlayer | b.isWin(turn==1?2:1) == -1) return 1;
-        // else the selected node lost
-        else return 0;
-    }
+    //     // if the selected node wins or ties then return 1
+    //     if (b.isWin(turn==1?2:1) == selectedPlayer | b.isWin(turn==1?2:1) == -1) return 1;
+    //     // else the selected node lost
+    //     else return 0;
+    // }
 
     // get all moves for the current board
     vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
 
-    // select and make a random move
-    int i = rand() % (moves.size());
-    vector<Move> checker_moves = moves[i];
-    int j = rand() % (checker_moves.size());
-    Move choice = checker_moves[j];
+    Move choice = Move();
+
+    if (moves.size() == 0)
+    {
+        // return loss for us
+        if (turn != selectedPlayer) return 1;
+        else return 0;
+    }
+    else if (moves.size() == 1 && moves[0].size() == 1)
+    {
+        // make that move
+        choice = moves[0][0];
+    }
+    else
+    {
+        // select and make a random move
+        int i = rand() % (moves.size());
+        vector<Move> checker_moves = moves[i];
+        int j = rand() % (checker_moves.size());
+        choice = checker_moves[j];
+    }
+
     b.makeMove(choice, turn);
 
-    // Move m = minimax(5, b, turn);
-    // b.makeMove(choice, turn);
-
     return rollout(b, turn == 1?2:1, selectedPlayer);
-
-    // return minimax(b, selectedPlayer, MINIMAX_DEPTH);
 }
 
 
+// maybe instead of keeping track of the parent node, have a vector that creates a
+// path for us to backpropagate on
+// ^ this prevents expensive backtracking through recursion
 void StudentAI::backpropagate(int w, int nodeIdx)
 {
     MCTree.at(nodeIdx).w_i += w;
@@ -264,6 +285,7 @@ void StudentAI::backpropagate(int w, int nodeIdx)
 }
 
 
+// should be fine
 double StudentAI::calculateUCT(int nodeIdx)
 {
     // get values for current child node w_i and s_i
