@@ -41,7 +41,7 @@ public: // given code DO NOT CHANGE
 private: // member variables that we added
     const int MINIMAX_DEPTH = 3;
     const int MCTS_UCT_CONS = 2;
-    const int NUMBER_OF_SIMULATIONS = 500;
+    const int NUMBER_OF_SIMULATIONS = 700;
     vector<MCNode> MCTree;
 
 
@@ -50,7 +50,7 @@ private: // Monte Carlo Tree Search algorithm
 
     // simulates an entire game following the monte carlo algorithm steps
     // selection, expansion, rollout, and backpropagation 
-    void simulateGames(Board board, int nodeIdx, int turn);
+    void simulateGames(int nodeIdx, int turn);
 
     // Selects the children node with the highest UCT value
     int select(int nodeIdx);
@@ -63,11 +63,11 @@ private: // Monte Carlo Tree Search algorithm
     // Randomly plays a game until one player win.
     // returns 1 if the rollout results in a win for the selectedPlayer
     // or 0 if the player lost
-    int rollout(Board b, int turn, int selectedPlayer);
+    double rollout(Board b, int turn, int selectedPlayer);
 
     // updates the w_i and s_i member variables from a given node 
     // PRE-CONDITION: check the player's turn to pass the correct win value
-    void backpropagate(int w, int nodeIdx);
+    void backpropagate(double w, int nodeIdx);
 
     // calculates the UCT value of the node at the given index.
     // UCT value = (w_i/s_i) + (MCTS_UCT * sqrt(log(s_p)/s_i))
@@ -82,7 +82,7 @@ private: // Monte Carlo Tree Search algorithm
 
 private: // minimax algorithm
     // returns the utility/heuristic value given the state of the game
-    int evaluate(Board board);
+    int evaluate(Board board, int selectedPlayer);
 
     // recursive algorithm to pick best move
     int minimax(Board board, int minimaxPlayer, int depth);
