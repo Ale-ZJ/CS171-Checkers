@@ -3,7 +3,7 @@
     Group members:
         Sumpter, Danielle Lapre, dsumpter, 63383218
         Zhang Jiang, Alexandra, azhangji, 53188999
-    Last Modified: 11/17/2022
+    Last Modified: 12/02/2022
 ***/
 
 
@@ -16,20 +16,32 @@
 using namespace std;
 
 
+
+
 MCNode::MCNode()
+    : visits(1)
 {
 }
 
-// copy constructor
+
+MCNode::MCNode(Board b, Move a, int p)
+    : board(b), score(0), visits(1), action(a), parent(p), children({})
+{
+}
+
+
 MCNode::MCNode(const MCNode& other)
 {
-    board = other.board;
-    w_i = other.w_i;
-    s_i = other.s_i;
-    parentMove = other.parentMove;
-    parentNode = other.parentNode;
-    children = other.children;
+    board       = other.board;
+    score       = other.score;
+    visits      = other.visits;
+    action      = other.action;
+    parent      = other.parent;
+    children    = other.children;
 }
+
+
+
 
 
 //The following part should be completed by students.
@@ -42,6 +54,7 @@ StudentAI::StudentAI(int col,int row,int p)
     player = 2;
 }
 
+
 Move StudentAI::GetMove(Move move)
 {
     // add the opponent's move to our board
@@ -52,90 +65,84 @@ Move StudentAI::GetMove(Move move)
         board.makeMove(move, player == 1?2:1);
     }
 
-    // cout << "AI is player number " << player << endl;
-    // Move res = minimax(MINIMAX_DEPTH, board, player); 
     MCTree = vector<MCNode>();
+
     Move res = mcts();
-
-    // cout << "getMove(): hi 0" << endl;
-    // make the chosen move
     board.makeMove(res, player);
-    // cout << "getMove(): hi 1" << endl;
 
-    // return the chosen move to the opponent
     return res;
-
 }
 
 
 // -------- MONTE CARLO SEARCH TREE ALGORITHM --------------
 
-// NOTE: make function to create new MCNode and add it to the MCTree
 
 Move StudentAI::mcts()
 {
-    // make a new MCNode of the current board
-    MCNode headNode = makeNewMCNode(board, Move(), -1);
-
-    // add the head node to the MCTree
+    // make a new MCNode of the current board and add to MCTree
+    Board copyBoard = board;
+    MCNode headNode = MCNode(copyBoard, Move(), -1);
     MCTree.push_back(headNode);
 
-    // get the possible moves from the current board AND make each move on a
-    // new board. then make a new MCNode for each new board, adding each into
-    // the MCTree.
-    expand(board, 0, player);
+    // initial expansion adds all possible moves for player
+    addMovesToTree(0, player);
 
     // conduct simulations of game
     for (int i = 0; i < NUMBER_OF_SIMULATIONS; i++)
     {
         // NOTE: will always simulate on the head node and begin with our turn 
-        simulateGames(0, player == 1?2:1);
+        simulateGames(0, 3 - player);
     }
 
-    // calculate the UCT for each possible move from the head board state
-    int selectedChild = 0;
-    unsigned int visits = 0;
+    // select the immediate children who has the highest score
+    unsigned int selectedChild = 1;
+    int highestScore = numeric_limits<int>::min();
     
     for (unsigned int n : MCTree[0].children)
-    {        
-        // NOTE: if two nodes have the same # visits, prefer the first one
-        if (MCTree[n].s_i > visits)
+    {     
+        //cout << "child #" << n << " score " << MCTree[n].score << endl;   
+        // NOTE: if two nodes have the same # score, prefer the last one
+        if (MCTree[n].score >= highestScore)
         {
-            visits = MCTree[n].s_i;
+            //cout << "found new fav child with score " << MCTree[n].score << endl;
+            highestScore = MCTree[n].score;
             selectedChild = n;
         } 
     }
 
-    // RETURN the move with the highest UCT
-    return MCTree[selectedChild].parentMove;
+    //cout << "child " << selectedChild << " move " << MCTree[selectedChild].action.toString() << endl;
+
+    return MCTree[selectedChild].action;
 }
 
 
 // NOTE: need to keep track of turn
 void StudentAI::simulateGames(int nodeIdx, int turn)
 {
-    // if necessary, traverse until you get a leaf node
+    // traverse until you get a leaf node
     while (MCTree[nodeIdx].children.size() != 0)
     {
         nodeIdx = select(nodeIdx);
-        turn = (turn == 1)?2:1;
+        //cout << "simulateGames() select ok" << endl;
+        turn = 3 - turn;
     }
-
-    Board new_board = MCTree[nodeIdx].board;
 
     // if a "mature" node, then expand and retrieve the corresponding board
     // for that new child node
 
     // [NOTE:] a "mature" node is one that has been simulated over a given amount
     // of times :)
-    if (MCTree[nodeIdx].s_i == 100)
+    if (MCTree[nodeIdx].visits == MATURITY_THRESHOLD)
     {
-        nodeIdx = expand(new_board, nodeIdx, turn);
-        new_board = MCTree[nodeIdx].board;
+        nodeIdx = expand(nodeIdx, turn);
+        //cout << "simulateGames() expand ok" << endl;
     }
 
-    double w = rollout(new_board, turn, turn);
-    backpropagate(w, nodeIdx);
+    double score = rollout(nodeIdx, turn);
+    //cout << "simulateGames() rollout ok" << endl;
+
+    backpropagate(score, nodeIdx);
+    //cout << "simulateGames() backpropagate ok" << endl;
 }
 
 
@@ -149,7 +156,6 @@ int StudentAI::select(int nodeIdx)
     // calculate the UCT of the children nodes
     for (unsigned int c : MCTree[nodeIdx].children)
     {
-        // find the child node with the highest UCT
         double u = calculateUCT(c);
         
         if (u > highestUCT)
@@ -159,92 +165,58 @@ int StudentAI::select(int nodeIdx)
         }
     }
 
-    // RETURN the node with the highest UCT
     return favoriteChild;
 }
 
 
-int StudentAI::expand(Board b, int parentIdx, int turn)
+int StudentAI::expand(int parentIdx, int turn)
 {
-    // add all moves from the current board state to the MCTree
-    addMovesToTree(b, parentIdx, turn);
+    // add all possible moves from the current board state to the MCTree
+    addMovesToTree(parentIdx, turn);
 
     // return the first child move seen
     return MCTree[parentIdx].children[0];
 }
 
 
-double StudentAI::rollout(Board b, int turn, int selectedPlayer)
+double StudentAI::rollout(int nodeIdx, int turn)
 {
-    unsigned int numRollouts = 0;
-    unsigned int win = 0;
+    Board copyBoard = MCTree[nodeIdx].board;
 
-    // conduct rollout until (1) terminal node is reached or (2) the rollout
-    // threshold is met and a board evaluation is therefore conducted
-    while (numRollouts < 50)
+    // rollout until a certain depth
+    for (unsigned int r = 0; r < MAX_ROLLOUTS; ++r)
     {
-        // get all moves for the current board
-        vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
+        vector<vector<Move>> moves = copyBoard.getAllPossibleMoves(turn);
 
-        Move choice = Move();
-
-        // RETURN a tie if tie
-        if (b.isWin(selectedPlayer) == -1) return 0.5;
-
-        if (moves.size() == 0)
+        // no moves left, the game is terminal
+        if (moves.size() != 0)
         {
-            // RETURN a loss if we have no more moves
-            if (turn != selectedPlayer) return 1;
-            else return 0;
+            return evaluate(copyBoard, player);
         }
-        else if (moves.size() == 1 && moves[0].size() == 1)
-        {
-            // make that move
-            choice = moves[0][0];
-        }
-        else
-        {
-            // select and make a random move
-            int i = rand() % (moves.size());
-            vector<Move> checker_moves = moves[i];
-            int j = rand() % (checker_moves.size());
-            choice = checker_moves[j];
-        }
+        
+        // select and make a random move
+        int i = rand() % (moves.size());
+        vector<Move> checker_moves = moves[i];
+        int j = rand() % (checker_moves.size());
+        Move choice = checker_moves[j];
 
-        b.makeMove(choice, turn);
-
-        turn = (turn == 1)?2:1;
-        numRollouts++;
+        copyBoard.makeMove(choice, turn);
+        turn = (turn == 1) ? 2:1;    
     }
 
-    // the difference in pieces on the current board state; board evaluation
-    int difference = evaluate(b, selectedPlayer);
-
-    if (difference > 0) return 1;
-    else if (difference < 0) return 0;
-    else return 0.5;
-
+    // if the board is not terminal, then call evaluate function
+    return evaluate(copyBoard, player);
 }
 
 
-void StudentAI::backpropagate(double w, int nodeIdx)
+void StudentAI::backpropagate(double score, int nodeIdx)
 {
-    MCTree[nodeIdx].w_i += w;
-    MCTree[nodeIdx].s_i += 1;
-
-    // if no parent, the node is the head
-    if (MCTree[nodeIdx].parentNode == -1)
+    while(MCTree[nodeIdx].parent != -1)
     {
-        return;
-    }
-    else
-    {
-        int parentIdx = MCTree[nodeIdx].parentNode;
+        MCTree[nodeIdx].score  += score;
+        MCTree[nodeIdx].visits += 1;
 
-        // if a tie, continue to backpropagate a tie, if not, then backpropagate
-        // the opposite value (win/loss)
-        if (w == 0.5) return backpropagate(w, parentIdx);
-        else return backpropagate(w==1?0:1, parentIdx);
+        nodeIdx = MCTree[nodeIdx].parent;
     }
 }
 
@@ -252,28 +224,29 @@ void StudentAI::backpropagate(double w, int nodeIdx)
 double StudentAI::calculateUCT(int nodeIdx)
 {
     // get values for current child node w_i and s_i
-    double w = MCTree[nodeIdx].w_i;
-    double s = MCTree[nodeIdx].s_i;
+    double w_i = MCTree[nodeIdx].score;
+    double s_i = MCTree[nodeIdx].visits;
     //cout << "w, s pair is " << w << " / " << s << endl;
 
     // access parent node and get s_p
-    int parent = MCTree[nodeIdx].parentNode;
-    double p = MCTree[parent].s_i;
+    int parent = MCTree[nodeIdx].parent;
+    double s_p = MCTree[parent].visits;
     //cout << "s_p value is " << p << endl;
 
     double w_div_s;
     double l_div_s;
 
-    if (s == 0)
+    if (s_i == 0)
     {
+        cout << ":)" << endl;
         // division by 0 is +infinity
         w_div_s = numeric_limits<double>::max();
         l_div_s = numeric_limits<double>::max();
     }
     else
     {
-        w_div_s = double(w) / s;
-        l_div_s = log(p) / s;
+        w_div_s = w_i / s_i;
+        l_div_s = log(s_p) / s_i;
     }
     //cout << "w / s is " << w_div_s << endl;
     //cout << "log(s_p) / s is " << l_div_s << endl;
@@ -282,48 +255,24 @@ double StudentAI::calculateUCT(int nodeIdx)
 }
 
 
-
-MCNode StudentAI::makeNewMCNode(Board b, Move parentMove, int parentIdx)
+void StudentAI::addMovesToTree(int parentIdx, int turn)
 {
-    Board copyBoard = board;
-    MCNode newNode;
-
-    newNode.board = copyBoard;
-    newNode.w_i = 0;
-    newNode.s_i = 0;
-    newNode.parentMove = parentMove;
-    newNode.parentNode = parentIdx;
-    newNode.children = {};
-
-    return newNode;
-}
-
-
-void StudentAI::addMovesToTree(Board b, int parentIdx, int turn)
-{
+    Board b = MCTree[parentIdx].board;
     vector<vector<Move>> moves = b.getAllPossibleMoves(turn);
 
     for (vector<Move> checker_moves : moves)
     {
         for (Move m : checker_moves)
         {
-            Board new_board = b;
-            new_board.makeMove(m, turn);
+            Board newBoard = b;
+            newBoard.makeMove(m, turn);
 
-            // initialize new MCNode
-            MCNode child = makeNewMCNode(new_board, m, parentIdx);
-            // MCNode child;
-            // child.board = new_board;
-            // child.w_i = 0;
-            // child.s_i = 0;
-            // child.parentNode = parentIdx;
-            // child.parentMove = m;
-
-            // insert the new child MCNode to the tree
+            // initialize new child and add to MCTree
+            MCNode child = MCNode(newBoard, m, parentIdx);
             MCTree.push_back(child);
 
             // insert children index
-            // the children is the last added node into the vector, hence vector.size
+            // the children is the last added node into the vector, hence vector.size -1
             MCTree[parentIdx].children.push_back(MCTree.size() - 1); 
         }
     }
@@ -334,11 +283,23 @@ void StudentAI::addMovesToTree(Board b, int parentIdx, int turn)
 // ---------------- MINIMAX ALGORITHM  ------------------
 
 
-// returns the difference in number of pieces
-int StudentAI::evaluate(Board board, int selectedPlayer)
+double StudentAI::evaluate(const Board& b, int selectedPlayer)
 {
-    if (selectedPlayer == 2) return board.whiteCount - board.blackCount;
-    else return board.blackCount - board.whiteCount;
+    double score = 0.0;
+    char playerColor = (selectedPlayer == 1) ? 'B' : 'W';
+
+    for (vector<Checker> row : b.board)
+    {
+        for (Checker c : row)
+        {
+            if (c.color[0] == playerColor && c.isKing) score += 0.25;
+        }
+    }
+
+    if (selectedPlayer == 2) score += (b.whiteCount - b.blackCount)/10;
+    else score += (b.blackCount - b.whiteCount)/10;
+
+    return score;
 }
 
 
