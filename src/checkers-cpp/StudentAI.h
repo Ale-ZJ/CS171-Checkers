@@ -44,9 +44,9 @@ public: // given code DO NOT CHANGE
 private: // member variables that we added
     const int MINIMAX_DEPTH = 3;
     const int MCTS_UCT_CONS = 2;
-    const int MATURITY_THRESHOLD = 10;
-    const int NUMBER_OF_SIMULATIONS = 700;
-    const int MAX_ROLLOUTS = 8;
+    const int MATURITY_THRESHOLD = 50;
+    const int NUMBER_OF_SIMULATIONS = 500;
+    const int MAX_ROLLOUTS = 20;
     vector<MCNode> MCTree;
 
 

@@ -19,13 +19,12 @@ using namespace std;
 
 
 MCNode::MCNode()
-    : visits(1)
 {
 }
 
 
 MCNode::MCNode(Board b, Move a, int p)
-    : board(b), score(0), visits(1), action(a), parent(p), children({})
+    : board(b), score(0), visits(0), action(a), parent(p), children({})
 {
 }
 
@@ -96,21 +95,23 @@ Move StudentAI::mcts()
 
     // select the immediate children who has the highest score
     unsigned int selectedChild = 1;
-    int highestScore = numeric_limits<int>::min();
+    int highestScore = calculateUCT(1);
     
-    for (unsigned int n : MCTree[0].children)
+    for (unsigned int c = 2; c <= MCTree[0].children.size(); ++c)
     {     
-        //cout << "child #" << n << " score " << MCTree[n].score << endl;   
+        double u = calculateUCT(c);
+
+        cout << "child #" << c << " uct " << u << endl;   
         // NOTE: if two nodes have the same # score, prefer the last one
-        if (MCTree[n].score >= highestScore)
+        if (u >= highestScore)
         {
             //cout << "found new fav child with score " << MCTree[n].score << endl;
-            highestScore = MCTree[n].score;
-            selectedChild = n;
+            highestScore = u;
+            selectedChild = c;
         } 
     }
 
-    //cout << "child " << selectedChild << " move " << MCTree[selectedChild].action.toString() << endl;
+    cout << "mcts(): child " << selectedChild << " move " << MCTree[selectedChild].action.toString() << endl;
 
     return MCTree[selectedChild].action;
 }
@@ -123,8 +124,14 @@ void StudentAI::simulateGames(int nodeIdx, int turn)
     while (MCTree[nodeIdx].children.size() != 0)
     {
         nodeIdx = select(nodeIdx);
-        //cout << "simulateGames() select ok" << endl;
+        cout << "simulateGames() select ok" << endl;
         turn = 3 - turn;
+    }
+
+    // if the leaf node is terminal then return
+    if ( MCTree[nodeIdx].board.isWin(turn) != 0 )
+    {
+        return;
     }
 
     // if a "mature" node, then expand and retrieve the corresponding board
@@ -134,15 +141,17 @@ void StudentAI::simulateGames(int nodeIdx, int turn)
     // of times :)
     if (MCTree[nodeIdx].visits == MATURITY_THRESHOLD)
     {
+        cout << "simulateGames() mature node" << endl;
         nodeIdx = expand(nodeIdx, turn);
-        //cout << "simulateGames() expand ok" << endl;
+        cout << "simulateGames() expand ok" << endl;
+        turn = 3 - turn;
     }
 
     double score = rollout(nodeIdx, turn);
-    //cout << "simulateGames() rollout ok" << endl;
+    cout << "simulateGames() rollout ok" << endl;
 
     backpropagate(score, nodeIdx);
-    //cout << "simulateGames() backpropagate ok" << endl;
+    cout << "simulateGames() backpropagate ok" << endl;
 }
 
 
@@ -189,7 +198,7 @@ double StudentAI::rollout(int nodeIdx, int turn)
         vector<vector<Move>> moves = copyBoard.getAllPossibleMoves(turn);
 
         // no moves left, the game is terminal
-        if (moves.size() != 0)
+        if (moves.size() == 0)
         {
             return evaluate(copyBoard, player);
         }
@@ -201,17 +210,18 @@ double StudentAI::rollout(int nodeIdx, int turn)
         Move choice = checker_moves[j];
 
         copyBoard.makeMove(choice, turn);
-        turn = (turn == 1) ? 2:1;    
+        turn = 3 - turn;    
     }
 
     // if the board is not terminal, then call evaluate function
+    cout << "rollout(): finished for node #" << nodeIdx << " with score " << evaluate(copyBoard, player) << endl;
     return evaluate(copyBoard, player);
 }
 
 
 void StudentAI::backpropagate(double score, int nodeIdx)
 {
-    while(MCTree[nodeIdx].parent != -1)
+    while(nodeIdx != -1)
     {
         MCTree[nodeIdx].score  += score;
         MCTree[nodeIdx].visits += 1;
@@ -226,19 +236,18 @@ double StudentAI::calculateUCT(int nodeIdx)
     // get values for current child node w_i and s_i
     double w_i = MCTree[nodeIdx].score;
     double s_i = MCTree[nodeIdx].visits;
-    //cout << "w, s pair is " << w << " / " << s << endl;
+    cout << "w, s pair is " << w_i << " / " << s_i << endl;
 
     // access parent node and get s_p
     int parent = MCTree[nodeIdx].parent;
     double s_p = MCTree[parent].visits;
-    //cout << "s_p value is " << p << endl;
+    cout << "s_p value is " << s_p << endl;
 
     double w_div_s;
     double l_div_s;
 
     if (s_i == 0)
     {
-        cout << ":)" << endl;
         // division by 0 is +infinity
         w_div_s = numeric_limits<double>::max();
         l_div_s = numeric_limits<double>::max();
@@ -292,12 +301,12 @@ double StudentAI::evaluate(const Board& b, int selectedPlayer)
     {
         for (Checker c : row)
         {
-            if (c.color[0] == playerColor && c.isKing) score += 0.25;
+            if (c.color[0] == playerColor && c.isKing) score += 5;
         }
     }
 
-    if (selectedPlayer == 2) score += (b.whiteCount - b.blackCount)/10;
-    else score += (b.blackCount - b.whiteCount)/10;
+    if (selectedPlayer == 2) score += (b.whiteCount - b.blackCount);
+    else score += (b.blackCount - b.whiteCount);
 
     return score;
 }
