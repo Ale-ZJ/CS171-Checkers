@@ -1,7 +1,7 @@
 # CS-171 Checkers Project
 Current Version: 1.1.0.11052019
 
-Downloaded from [Checkers_Student gitlab](https://gitlab.ics.uci.edu/ai-projects/Checkers_Student)
+Disclaimer: The checkers game mechanics was downloaded from [Checkers_Student gitlab](https://gitlab.ics.uci.edu/ai-projects/Checkers_Student), Danielle Sumpter and I worked on the Artificial Intelligence agent solely
 
 
 ### 10/28/2019
